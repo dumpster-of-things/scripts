@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+[[ "${1}" != +(\-)@([hH])?([eE])?([lL])?([pP]) ]] || {
+	echo 'USAGE:  [{datestring} |] epoc [{datestring}]'
+	echo 'DESCRIPTION:'
+	echo '   Converts any valid datestring into the equivilant epoc-datestring( seconds since 1970−01−01 00:00:00 UTC ).'
+	echo '   Input is optional and may be supplied from either direction (piped in, or passed as an argument).'
+	echo '   By default, if no datestring is supplied, the current date and time are used.'
+	echo '   The output format includes milliseconds (`date "+%s.%3N"`).'
+	echo '   This script is the counterpart to the `depoc` command.'
+	echo ""
+	exit 0
+}
+[ -t 0 ] && { (( ${#} == 0 )) && date '+%s.%3N' || date '+%s.%3N' --date="${@}" ; } || { date '+%s.%3N' --date="$(cat -)" ; }
