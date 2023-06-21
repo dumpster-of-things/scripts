@@ -2,6 +2,8 @@
 
 _dipset() {
 	_1() {
+		echo -e "\e[1;32mNAME\e[0;32m:\e[0m"
+		echo '   op - otherpipe'
 		echo -e "\e[1;32mUSAGE\e[0;32m:\e[0m"
 		echo "   Can accept input through a pipe [AND/OR] from a file:"
 		echo "         whatevs | ${0##*\/} 'FILTER-EXPRESSION(s)' '...' [FILENAME]"
