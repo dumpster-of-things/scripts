@@ -1,0 +1,755 @@
+#!/usr/bin/env bash
+
+Usage() {
+    echo 'NAME: Cvt - Convert between various units of measurements'
+    echo ""
+    echo 'USAGE:'
+    echo "   (A):   ${0##*\/} '[N|:1]{UNIT_FROM}' '[N|:1]{UNIT_TO}'"
+	echo "                         (Known)          (Unkown)"
+    echo "   (B):   [N|1]{UNIT_FROM} | ${0##*\/} [N|1]{UNIT_TO}"
+    echo ""
+    echo 'DESCRIPTION:'
+    echo '   Converts variable(N) quantities of one unit of measurement'
+    echo '      into [optionally variable quantities] of another.'
+	echo '   Note that, for more exotic calculations, a quantity of {TO} units may be specified;'
+	echo "     and `${0##*\/}` will handle the math for you."
+    echo '   When no quantity(N) is supplied with a {UNIT}, it defaults to 1 of said {UNIT}.
+    echo ""
+	[[ "${2}" == *(\-)@([uU][nN][iI][tT])?([sS]) ]] || { echo " ( For a list of supported units, include the --units flag )" ; exit ${1:-0} ; }
+	echo "* UNITS:"
+	echo " ( Time )"
+	echo "       sec:  seconds"
+	echo "       min:  minutes"
+	echo "      hour:  hours"
+	echo "       day:  days"
+	echo "      week:  weeks"
+	echo "     month:  months"
+	echo "      year:  years"
+	echo "   -   -   -"
+	echo " ( Length )"
+	echo "  [nmcdk]m:  {,nano,milli,centi,deca,kilo}meters"
+	echo "       in:  inches"
+	echo "       ft:  feet"
+	echo "       yd:  yards"
+	echo "       mi:  miles"
+	echo "   -   -   -"
+	echo " ( Weight )"
+	echo "   [umk]g : {,micro,milli,kilo}grams"
+	echo "      oz : ounces"
+	echo "      lb : pounds"
+	echo "     ton : tonnes"
+	echo "   -   -   -"
+	echo " ( Volume )"
+	echo "    [m]l : {,milli}liters"
+	echo "     tsp : teaspoons"
+	echo "    tbsp : tablespoons"
+	echo "  [fl]oz : fluid ounces"
+	echo "     cup : cups"
+	echo "      pt : pints"
+	echo "      qt : quarts"
+	echo "     gal : gallons"
+	echo "   -   -   -"
+	echo " ( Density )"
+	echo "     gcm : g/cm3; grams per cubic cm"
+	echo "     kgl : kg/L; kilograms per liter"
+	echo "   -   -   -"
+	echo " ( Pressure )"
+	echo "     gfc :  grams-force per square centimeter"
+	echo "     psi :  pounds-force per square inch"
+	echo "     atm :  atmospheric"
+	echo "    torr :  Torricelli"
+	echo "  pascal :  Pascal"
+	echo "   -   -   -"
+	echo " ( Temperature )"
+	echo "       F :  farenheight"
+	echo "       C :  celsius"
+	echo "       K :  Kelvin"
+	echo "   -   -   -"
+	echo " ( Data Size )"
+	echo "       b : bits"
+	echo "       B : Bytes"
+	echo "      Kb : Kilobits"
+	echo "      KB : KiloBytes"
+	echo "      Mb : Megabits"
+	echo "      MB : MegaBytes"
+	echo "      Gb : Gigabits"
+	echo "      GB : GigaBytes"
+	echo "      Tb : Terabits"
+	echo "      TB : TeraBytes"
+	echo "      Pb : Petabits"
+	echo "      PB : PetaBytes"
+	echo "   -   -   -"
+	echo "   ( Experimental / WIP )"
+	echo "       physical bit-weight of data.  |( updated with current storage" #WIP: include ability to input
+	echo "       physical byte-weight of data. | density theoretical maximum )" #   a given year/medium for tailored results.
+	echo ""
+	exit 0
+}
+[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || Usage 0 "$2"
+[[ "$1" != *(\-)@([uU][nN][iI][tT])?([sS]) ]] || Usage 0 "unit"
+
+Maths() {
+	local u="${2/\ */}" ; u="${_//[!0-9\-\.]/}"
+	local n=$(echo "$2 / ${3:-1}" | bc -l)
+	[[ "$n" != *\.* ]] || { until [[ "${n: -1}" != 0 ]]; do n="${n:: -1}" ; done ; [[ "$n" != *\. ]] || n="${n:: -1}" ; }
+	[[ -n "$3" ]] && echo "$u ${1%_*} == $n ${1#*_}($3)" || echo "$u ${1%_*} == $n ${1#*_}"
+}
+Times() { Maths "$1" "($2 * $3)" "$4" ; }
+Per() { Maths "$1" "($2 / $3)" "$4" ; }
+
+### ( TIME )
+## seconds
+_seconds_minutes() { Per "${FUNCNAME:1}" "$1" '60' "$2" ; }
+_secs_mins() { _seconds_minutes ${@} ; }
+_secs_min() { _seconds_minutes ${@} ; }
+_sec_mins() { _seconds_minutes ${@} ; }
+_sec_min() { _seconds_minutes ${@} ; }
+_seconds_hours() { Per "${FUNCNAME:1}" "$1" '3600' "$2" ; }
+_secs_hours() { _seconds_hours ${@} ; }
+_secs_hour() { _seconds_hours ${@} ; }
+_sec_hours() { _seconds_hours ${@} ; }
+_sec_hour() { _seconds_hours ${@} ; }
+_seconds_days() { Per "${FUNCNAME:1}" "$1" '86400' "$2" ; }
+_secs_days() { _seconds_days ${@} ; }
+_secs_day() { _seconds_days ${@} ; }
+_sec_days() { _seconds_days ${@} ; }
+_sec_day() { _seconds_days ${@} ; }
+_seconds_weeks() { Per "${FUNCNAME:1}" "$1" '604800' "$2" ; }
+_secs_weeks() { _seconds_weeks ${@} ; }
+_secs_week() { _seconds_weeks ${@} ; }
+_sec_weeks() { _seconds_weeks ${@} ; }
+_sec_week() { _seconds_weeks ${@} ; }
+_seconds_months() { Per "${FUNCNAME:1}" "$1" '2592000' "$2" ; }
+_secs_months() { _seconds_months ${@} ; }
+_secs_month() { _seconds_months ${@} ; }
+_sec_months() { _seconds_months ${@} ; }
+_sec_month() { _seconds_months ${@} ; }
+_seconds_years() { Per "${FUNCNAME:1}" "$1" '31536000' "$2" ; }
+_secs_years() { _seconds_years ${@} ; }
+_secs_year() { _seconds_years ${@} ; }
+_sec_years() { _seconds_years ${@} ; }
+_sec_year() { _seconds_years ${@} ; }
+## minutes
+_minutes_seconds() { Times "${FUNCNAME:1}" "$1" '60' "$2" ; }
+_mins_secs() { _minutes_seconds ${@} ; }
+_mins_sec() { _minutes_seconds ${@} ; }
+_min_secs() { _minutes_seconds ${@} ; }
+_min_sec() { _minutes_seconds ${@} ; }
+_minutes_hours() { Per "${FUNCNAME:1}" "$1" '60' "$2" ; }
+_mins_hours() { _minutes_hours ${@} ; }
+_mins_hour() { _minutes_hours ${@} ; }
+_min_hours() { _minutes_hours ${@} ; }
+_min_hour() { _minutes_hours ${@} ; }
+_minutes_days() { Per "${FUNCNAME:1}" "$1" '1440' "$2" ; }
+_mins_days() { _minutes_days ${@} ; }
+_mins_day() { _minutes_days ${@} ; }
+_min_days() { _minutes_days ${@} ; }
+_min_day() { _minutes_days ${@} ; }
+_minutes_weeks() { Per "${FUNCNAME:1}" "$1" '10080' "$2" ; }
+_mins_weeks() { _minutes_weeks ${@} ; }
+_mins_week() { _minutes_weeks ${@} ; }
+_min_weeks() { _minutes_weeks ${@} ; }
+_min_week() { _minutes_weeks ${@} ; }
+_minutes_months() { Per "${FUNCNAME:1}" "$1" '43200' "$2" ; }
+_mins_months() { _minutes_months ${@} ; }
+_mins_month() { _minutes_months ${@} ; }
+_min_months() { _minutes_months ${@} ; }
+_min_month() { _minutes_months ${@} ; }
+_minutes_years() { Per "${FUNCNAME:1}" "$1" '525600' "$2" ; }
+_mins_years() { _minutes_years ${@} ; }
+_mins_year() { _minutes_years ${@} ; }
+_min_years() { _minutes_years ${@} ; }
+_min_year() { _minutes_years ${@} ; }
+## hours
+_hours_seconds() { Times "${FUNCNAME:1}" "$1" '3600' "$2" ; }
+_hours_secs() { _hours_seconds ${@} ; }
+_hour_secs() { _hours_seconds ${@} ; }
+_hours_sec() { _hours_seconds ${@} ; }
+_hour_sec() { _hours_seconds ${@} ; }
+_hours_minutes() { Times "${FUNCNAME:1}" "$1" '60' "$2" ; }
+_hours_mins() { _hours_minutes ${@} ; }
+_hour_mins() { _hours_minutes ${@} ; }
+_hours_min() { _hours_minutes ${@} ; }
+_hour_min() { _hours_minutes ${@} ; }
+_hours_days() { Per "${FUNCNAME:1}" "$1" '24' "$2" ; }
+_hours_day() { _hours_days ${@} ; }
+_hour_days() { _hours_days ${@} ; }
+_hour_day() { _hours_days ${@} ; }
+_hours_weeks() { Per "${FUNCNAME:1}" "$1" '168' "$2" ; }
+_hours_week() { _hours_weeks ${@} ; }
+_hour_weeks() { _hours_weeks ${@} ; }
+_hour_week() { _hours_weeks ${@} ; }
+_hours_months() { Per "${FUNCNAME:1}" "$1" '720' "$2" ; }
+_hours_month() { _hours_months ${@} ; }
+_hour_months() { _hours_months ${@} ; }
+_hour_month() { _hours_months ${@} ; }
+_hours_years() { Per "${FUNCNAME:1}" "$1" '8760' "$2" ; }
+_hours_year() { _hours_years ${@} ; }
+_hour_years() { _hours_years ${@} ; }
+_hour_year() { _hours_years ${@} ; }
+## days
+_days_seconds() { Times "${FUNCNAME:1}" "$1" '86400' "$2" ; }
+_days_secs() { _days_seconds ${@} ; }
+_day_secs() { _days_seconds ${@} ; }
+_days_sec() { _days_seconds ${@} ; }
+_day_sec() { _days_seconds ${@} ; }
+_days_minutes() { Times "${FUNCNAME:1}" "$1" '1440' "$2" ; }
+_days_mins() { _days_minutes ${@} ; }
+_day_mins() { _days_minutes ${@} ; }
+_days_min() { _days_minutes ${@} ; }
+_day_min() { _days_minutes ${@} ; }
+_days_hours() { Times "${FUNCNAME:1}" "$1" '24' "$2" ; }
+_days_hour() { _days_hours ${@} ; }
+_day_hours() { _days_hours ${@} ; }
+_day_hour() { _days_hours ${@} ; }
+_days_weeks() { Per "${FUNCNAME:1}" "$1" '7' "$2" ; }
+_days_week() { _days_weeks ${@} ; }
+_day_weeks() { _days_weeks ${@} ; }
+_day_week() { _days_weeks ${@} ; }
+_days_months() { Per "${FUNCNAME:1}" "$1" '30' "$2" ; }
+_days_month() { _days_months ${@} ; }
+_day_months() { _days_months ${@} ; }
+_day_month() { _days_months ${@} ; }
+_days_years() { Per "${FUNCNAME:1}" "$1" '365' "$2" ; }
+_days_year() { _days_years ${@} ; }
+_day_years() { _days_years ${@} ; }
+_day_year() { _days_years ${@} ; }
+## weeks
+_weeks_seconds() { Times "${FUNCNAME:1}" "$1" '604800' "$2" ; }
+_weeks_secs() { _weeks_seconds ${@} ; }
+_week_secs() { _weeks_seconds ${@} ; }
+_weeks_sec() { _weeks_seconds ${@} ; }
+_week_sec() { _weeks_seconds ${@} ; }
+_weeks_minutes() { Times "${FUNCNAME:1}" "$1" '10080' "$2" ; }
+_weeks_mins() { _weeks_minutes ${@} ; }
+_week_mins() { _weeks_minutes ${@} ; }
+_weeks_min() { _weeks_minutes ${@} ; }
+_week_min() { _weeks_minutes ${@} ; }
+_weeks_hours() { Times "${FUNCNAME:1}" "$1" '168' "$2" ; }
+_weeks_hour() { _weeks_hours ${@} ; }
+_week_hours() { _weeks_hours ${@} ; }
+_week_hour() { _weeks_hours ${@} ; }
+_weeks_days() { Times "${FUNCNAME:1}" "$1" '7' "$2" ; }
+_weeks_day() { _weeks_days ${@} ; }
+_week_days() { _weeks_days ${@} ; }
+_week_day() { _weeks_days ${@} ; }
+_weeks_months() { Per "${FUNCNAME:1}" "$1" '4.285' "$2" ; }
+_weeks_month() { _weeks_months ${@} ; }
+_week_months() { _weeks_months ${@} ; }
+_week_month() { _weeks_months ${@} ; }
+_weeks_years() { Per "${FUNCNAME:1}" "$1" '52.142' "$2" ; }
+_weeks_year() { _weeks_years ${@} ; }
+_week_years() { _weeks_years ${@} ; }
+_week_year() { _weeks_years ${@} ; }
+## months
+_months_seconds() { Times "${FUNCNAME:1}" "$1" '2592000' "$2" ; }
+_months_secs() { _months_seconds ${@} ; }
+_month_secs() { _months_seconds ${@} ; }
+_months_sec() { _months_seconds ${@} ; }
+_month_sec() { _months_seconds ${@} ; }
+_months_minutes() { Times "${FUNCNAME:1}" "$1" '43200' "$2" ; }
+_months_mins() { _months_minutes ${@} ; }
+_month_mins() { _months_minutes ${@} ; }
+_months_min() { _months_minutes ${@} ; }
+_month_min() { _months_minutes ${@} ; }
+_months_hours() { Times "${FUNCNAME:1}" "$1" '720' "$2" ; }
+_months_hour() { _months_hours ${@} ; }
+_month_hours() { _months_hours ${@} ; }
+_month_hour() { _months_hours ${@} ; }
+_months_days() { Times "${FUNCNAME:1}" "$1" '30' "$2" ; }
+_months_day() { _months_days ${@} ; }
+_month_days() { _months_days ${@} ; }
+_month_day() { _months_days ${@} ; }
+_months_weeks() { Times "${FUNCNAME:1}" "$1" '4.285' "$2" ; }
+_months_week() { _months_weeks ${@} ; }
+_month_weeks() { _months_weeks ${@} ; }
+_month_week() { _months_weeks ${@} ; }
+_months_years() { Per "${FUNCNAME:1}" "$1" '12' "$2" ; }
+_months_year() { _months_years ${@} ; }
+_month_years() { _months_years ${@} ; }
+_month_year() { _months_years ${@} ; }
+## years
+_years_seconds() { Times "${FUNCNAME:1}" "$1" '31536000' "$2" ; }
+_years_secs() { _years_seconds ${@} ; }
+_year_secs() { _years_seconds ${@} ; }
+_years_sec() { _years_seconds ${@} ; }
+_year_sec() { _years_seconds ${@} ; }
+_years_minutes() { Times "${FUNCNAME:1}" "$1" '525600' "$2" ; }
+_years_mins() { _years_minutes ${@} ; }
+_year_mins() { _years_minutes ${@} ; }
+_years_min() { _years_minutes ${@} ; }
+_year_min() { _years_minutes ${@} ; }
+_years_hours() { Times "${FUNCNAME:1}" "$1" '8760' "$2" ; }
+_years_hour() { _years_hours ${@} ; }
+_year_hours() { _years_hours ${@} ; }
+_year_hour() { _years_hours ${@} ; }
+_years_days() { Times "${FUNCNAME:1}" "$1" '365' "$2" ; }
+_years_day() { _years_days ${@} ; }
+_year_days() { _years_days ${@} ; }
+_year_day() { _years_days ${@} ; }
+_years_weeks() { Times "${FUNCNAME:1}" "$1" '52.142' "$2" ; }
+_years_week() { _years_weeks ${@} ; }
+_year_weeks() { _years_weeks ${@} ; }
+_year_week() { _years_weeks ${@} ; }
+_years_months() { Times "${FUNCNAME:1}" "$1" '12' "$2" ; }
+_years_month() { _years_months ${@} ; }
+_year_months() { _years_months ${@} ; }
+_year_month() { _years_months ${@} ; }
+###
+
+### ( LENGTH )
+## millimeters
+_nm_mm() { Per "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_nm_cm() { Per "${FUNCNAME:1}" "$1" '10000000' "$2" ; }
+_nm_in() { Per "${FUNCNAME:1}" "$1" '25400000' "$2" ; }
+_nm_dm() { Per "${FUNCNAME:1}" "$1" '100000000' "$2" ; }
+_nm_ft() { Per "${FUNCNAME:1}" "$1" '304800000' "$2" ; }
+_nm_yd() { Per "${FUNCNAME:1}" "$1" '914400000' "$2" ; }
+_nm_m() { Per "${FUNCNAME:1}" "$1" '1000000000' "$2" ; }
+_nm_km() { Per "${FUNCNAME:1}" "$1" '1000000000000' "$2" ; }
+_nm_mi() { Per "${FUNCNAME:1}" "$1" '1609344000000' "$2" ; }
+## millimeters
+_mm_nm() { Times "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_mm_cm() { Per "${FUNCNAME:1}" "$1" '10' "$2" ; }
+_mm_in() { Per "${FUNCNAME:1}" "$1" '25.4' "$2" ; }
+_mm_dm() { Per "${FUNCNAME:1}" "$1" '100' "$2" ; }
+_mm_ft() { Per "${FUNCNAME:1}" "$1" '304.8' "$2" ; }
+_mm_yd() { Per "${FUNCNAME:1}" "$1" '914.4' "$2" ; }
+_mm_m() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_mm_km() { Per "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_mm_mi() { Per "${FUNCNAME:1}" "$1" '1609344' "$2" ; }
+## centimeters
+_cm_nm() { Times "${FUNCNAME:1}" "$1" '10000000' "$2" ; }
+_cm_mm() { Times "${FUNCNAME:1}" "$1" '10' "$2" ; }
+_cm_in() { Per "${FUNCNAME:1}" "$1" '2.54' "$2" ; }
+_cm_dm() { Per "${FUNCNAME:1}" "$1" '10' "$2" ; }
+_cm_ft() { Per "${FUNCNAME:1}" "$1" '30.48' "$2" ; }
+_cm_yd() { Per "${FUNCNAME:1}" "$1" '91.44' "$2" ; }
+_cm_m() { Per "${FUNCNAME:1}" "$1" '100' "$2" ; }
+_cm_km() { Per "${FUNCNAME:1}" "$1" '100000' "$2" ; }
+_cm_mi() { Per "${FUNCNAME:1}" "$1" '160934.4' "$2" ; }
+## inches
+_in_nm() { Times "${FUNCNAME:1}" "$1" '25400000' "$2" ; }
+_in_mm() { Times "${FUNCNAME:1}" "$1" '25.4' "$2" ; }
+_in_cm() { Times "${FUNCNAME:1}" "$1" '2.54' "$2" ; }
+_in_dm() { Per "${FUNCNAME:1}" "$1" '3.937' "$2" ; }
+_in_ft() { Per "${FUNCNAME:1}" "$1" '12' "$2" ; }
+_in_yd() { Per "${FUNCNAME:1}" "$1" '36' "$2" ; }
+_in_m() { Per "${FUNCNAME:1}" "$1" '39.37' "$2" ; }
+_in_km() { Per "${FUNCNAME:1}" "$1" '39370' "$2" ; }
+_in_mi() { Per "${FUNCNAME:1}" "$1" '63360' "$2" ; }
+## decimeters
+_dm_nm() { Times "${FUNCNAME:1}" "$1" '100000000' "$2" ; }
+_dm_mm() { Times "${FUNCNAME:1}" "$1" '100' "$2" ; }
+_dm_cm() { Times "${FUNCNAME:1}" "$1" '10' "$2" ; }
+_dm_in() { Times "${FUNCNAME:1}" "$1" '3.937' "$2" ; }
+_dm_ft() { Per "${FUNCNAME:1}" "$1" '3.084' "$2" ; }
+_dm_yd() { Per "${FUNCNAME:1}" "$1" '9.144' "$2" ; }
+_dm_m() { Per "${FUNCNAME:1}" "$1" '10' "$2" ; }
+_dm_km() { Per "${FUNCNAME:1}" "$1" '10000' "$2" ; }
+_dm_mi() { Per "${FUNCNAME:1}" "$1" '16093.44' "$2" ; }
+## feet
+_ft_nm() { Times "${FUNCNAME:1}" "$1" '304800000' "$2" ; }
+_ft_mm() { Times "${FUNCNAME:1}" "$1" '304.8' "$2" ; }
+_ft_cm() { Times "${FUNCNAME:1}" "$1" '30.48' "$2" ; }
+_ft_in() { Times "${FUNCNAME:1}" "$1" '12' "$2" ; }
+_ft_dm() { Times "${FUNCNAME:1}" "$1" '3.048' "$2" ; }
+_ft_yd() { Per "${FUNCNAME:1}" "$1" '3' "$2" ; }
+_ft_m() { Per "${FUNCNAME:1}" "$1" '3.28084' "$2" ; }
+_ft_km() { Per "${FUNCNAME:1}" "$1" '3280.84' "$2" ; }
+_ft_mi() { Per "${FUNCNAME:1}" "$1" '5280' "$2" ; }
+## yards
+_yd_nm() { Times "${FUNCNAME:1}" "$1" '914400000' "$2" ; }
+_yd_mm() { Times "${FUNCNAME:1}" "$1" '914.4' "$2" ; }
+_yd_cm() { Times "${FUNCNAME:1}" "$1" '91.44' "$2" ; }
+_yd_in() { Times "${FUNCNAME:1}" "$1" '36' "$2" ; }
+_yd_dm() { Times "${FUNCNAME:1}" "$1" '9.144' "$2" ; }
+_yd_ft() { Times "${FUNCNAME:1}" "$1" '3' "$2" ; }
+_yd_m() { Per "${FUNCNAME:1}" "$1" '1.093613' "$2" ; }
+_yd_km() { Per "${FUNCNAME:1}" "$1" '1093.613' "$2" ; }
+_yd_mi() { Per "${FUNCNAME:1}" "$1" '1760' "$2" ; }
+## meters
+_m_nm() { Times "${FUNCNAME:1}" "$1" '1000000000' "$2" ; }
+_m_mm() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_m_cm() { Times "${FUNCNAME:1}" "$1" '100' "$2" ; }
+_m_in() { Times "${FUNCNAME:1}" "$1" '39.37' "$2" ; }
+_m_dm() { Times "${FUNCNAME:1}" "$1" '10' "$2" ; }
+_m_ft() { Times "${FUNCNAME:1}" "$1" '3.28084' "$2" ; }
+_m_yd() { Times "${FUNCNAME:1}" "$1" '1.093613' "$2" ; }
+_m_km() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_m_mi() { Per "${FUNCNAME:1}" "$1" '1609.344' "$2" ; }
+## kilometers
+_km_nm() { Times "${FUNCNAME:1}" "$1" '1000000000000' "$2" ; }
+_km_mm() { Times "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_km_cm() { Times "${FUNCNAME:1}" "$1" '100000' "$2" ; }
+_km_in() { Times "${FUNCNAME:1}" "$1" '39370' "$2" ; }
+_km_dm() { Times "${FUNCNAME:1}" "$1" '10000' "$2" ; }
+_km_ft() { Times "${FUNCNAME:1}" "$1" '3280.84' "$2" ; }
+_km_yd() { Times "${FUNCNAME:1}" "$1" '1093.613' "$2" ; }
+_km_m() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_km_mi() { Per "${FUNCNAME:1}" "$1" '1.609344' "$2" ; }
+## miles
+_mi_nm() { Times "${FUNCNAME:1}" "$1" '1609344000000' "$2" ; }
+_mi_mm() { Times "${FUNCNAME:1}" "$1" '1609344' "$2" ; }
+_mi_cm() { Times "${FUNCNAME:1}" "$1" '160934.4' "$2" ; }
+_mi_in() { Times "${FUNCNAME:1}" "$1" '63360' "$2" ; }
+_mi_dm() { Times "${FUNCNAME:1}" "$1" '16093.44' "$2" ; }
+_mi_ft() { Times "${FUNCNAME:1}" "$1" '5280' "$2" ; }
+_mi_m() { Times "${FUNCNAME:1}" "$1" '1609.344' "$2" ; }
+_mi_yd() { Times "${FUNCNAME:1}" "$1" '1760' "$2" ; }
+_mi_km() { Times "${FUNCNAME:1}" "$1" '1.609344' "$2" ; }
+###
+
+### ( WEIGHT )
+## micrograms
+_ug_mg() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_ug_g() { Per "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_ug_oz() { Per "${FUNCNAME:1}" "$1" '28350000' "$2" ; }
+_ug_lb() { Per "${FUNCNAME:1}" "$1" '453600000' "$2" ; }
+_ug_kg() { Per "${FUNCNAME:1}" "$1" '1000000000' "$2" ; }
+_ug_ton() { Per "${FUNCNAME:1}" "$1" '907200000000' "$2" ; }
+## milligrams
+_mg_ug() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_mg_g() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_mg_oz() { Per "${FUNCNAME:1}" "$1" '28350' "$2" ; }
+_mg_lb() { Per "${FUNCNAME:1}" "$1" '453600' "$2" ; }
+_mg_kg() { Per "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_mg_ton() { Per "${FUNCNAME:1}" "$1" '907200000' "$2" ; }
+## grams
+_g_ug() { Times "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_g_mg() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_g_oz() { Per "${FUNCNAME:1}" "$1" '28.35' "$2" ; }
+_g_lb() { Per "${FUNCNAME:1}" "$1" '448' "$2" ; }
+_g_kg() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_g_ton() { Per "${FUNCNAME:1}" "$1" '907200' "$2" ; }
+## ounces
+_oz_ug() { Times "${FUNCNAME:1}" "$1" '28350000' "$2" ; }
+_oz_mg() { Times "${FUNCNAME:1}" "$1" '28350' "$2" ; }
+_oz_g() { Times "${FUNCNAME:1}" "$1" '28.35' "$2" ; }
+_oz_kg() { Per "${FUNCNAME:1}" "$1" '35.27' "$2" ; }
+_oz_lb() { Per "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_oz_ton() { Per "${FUNCNAME:1}" "$1" '32000' "$2" ; }
+## pounds
+_lb_ug() { Times "${FUNCNAME:1}" "$1" '453600000' "$2" ; }
+_lb_mg() { Times "${FUNCNAME:1}" "$1" '453600' "$2" ; }
+_lb_g() { Times "${FUNCNAME:1}" "$1" '448' "$2" ; }
+_lb_oz() { Times "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_lb_kg() { Per "${FUNCNAME:1}" "$1" '2.205' "$2" ; }
+_lb_ton() { Per "${FUNCNAME:1}" "$1" '2000' "$2" ; }
+## kilograms
+_kg_ug() { Times "${FUNCNAME:1}" "$1" '1000000000' "$2" ; }
+_kg_mg() { Times "${FUNCNAME:1}" "$1" '1000000' "$2" ; }
+_kg_g() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_kg_oz() { Times "${FUNCNAME:1}" "$1" '35.27' "$2" ; }
+_kg_lb() { Times "${FUNCNAME:1}" "$1" '2.205' "$2" ; }
+_kg_ton() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+## tonnes
+_ton_ug() { Times "${FUNCNAME:1}" "$1" '907200000000' "$2" ; }
+_ton_mg() { Times "${FUNCNAME:1}" "$1" '907200000' "$2" ; }
+_ton_g() { Times "${FUNCNAME:1}" "$1" '907200' "$2" ; }
+_ton_oz() { Times "${FUNCNAME:1}" "$1" '32000' "$2" ; }
+_ton_lb() { Times "${FUNCNAME:1}" "$1" '2000' "$2" ; }
+_ton_kg() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+###
+
+### ( VOLUME )
+## milliliters
+_ml_tsp() { Per "${FUNCNAME:1}" "$1" '5' "$2" ; }
+_ml_tbsp() { Per "${FUNCNAME:1}" "$1" '14.79' "$2" ; }
+_ml_floz() { Per "${FUNCNAME:1}" "$1" '29.57' "$2" ; }
+_ml_oz() { _ml_floz ${@} ; }
+_ml_cup() { Per "${FUNCNAME:1}" "$1" '236.6' "$2" ; }
+_ml_pt() { Per "${FUNCNAME:1}" "$1" '473' "$2" ; }
+_ml_qt() { Per "${FUNCNAME:1}" "$1" '946.4' "$2" ; }
+_ml_l() { Per "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_ml_gal() { Per "${FUNCNAME:1}" "$1" '3785.411784' "$2" ; }
+## teaspoons
+_tsp_ml() { Times "${FUNCNAME:1}" "$1" '5' "$2" ; }
+_tsp_tbsp() { Per "${FUNCNAME:1}" "$1" '3' "$2" ; }
+_tsp_floz() { Per "${FUNCNAME:1}" "$1" '6' "$2" ; }
+_tsp_oz() { _tsp_floz ${@} ; }
+_tsp_cup() { Per "${FUNCNAME:1}" "$1" '48' "$2" ; }
+_tsp_pt() { Per "${FUNCNAME:1}" "$1" '96' "$2" ; }
+_tsp_qt() { Per "${FUNCNAME:1}" "$1" '192' "$2" ; }
+_tsp_l() { Per "${FUNCNAME:1}" "$1" '200' "$2" ; }
+_tsp_gal() { Per "${FUNCNAME:1}" "$1" '768' "$2" ; }
+## tablespoons
+_tbsp_ml() { Times "${FUNCNAME:1}" "$1" '14.79' "$2" ; }
+_tbsp_tsp() { Times "${FUNCNAME:1}" "$1" '3' "$2" ; }
+_tbsp_floz() { Per "${FUNCNAME:1}" "$1" '2' "$2" ; }
+_tbsp_oz() { _tbsp_floz ${@} ; }
+_tbsp_cup() { Per "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_tbsp_pt() { Per "${FUNCNAME:1}" "$1" '32' "$2" ; }
+_tbsp_qt() { Per "${FUNCNAME:1}" "$1" '64' "$2" ; }
+_tbsp_l() { Per "${FUNCNAME:1}" "$1" '67.63' "$2" ; }
+_tbsp_gal() { Per "${FUNCNAME:1}" "$1" '256' "$2" ; }
+## fluid ounces
+_floz_ml() { Times "${FUNCNAME:1}" "$1" '29.57' "$2" ; }
+_oz_ml() { _floz_ml ${@} ; }
+_floz_tsp() { Times "${FUNCNAME:1}" "$1" '6' "$2" ; }
+_oz_tsp() { _floz_tsp ${@} ; }
+_floz_tbsp() { Times "${FUNCNAME:1}" "$1" '2' "$2" ; }
+_oz_tbsp() { _floz_tbsp ${@} ; }
+_floz_cup() { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_oz_cup() { _floz_cup ${@} ; }
+_floz_pt() { Per "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_oz_pt() { _floz_pt ${@} ; }
+_floz_qt() { Per "${FUNCNAME:1}" "$1" '32' "$2" ; }
+_oz_qt() { _floz_qt ${@} ; }
+_floz_l() { Per "${FUNCNAME:1}" "$1" '33.81' "$2" ; }
+_oz_l() { _floz_l ${@} ; }
+_floz_gal() { Per "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_oz_gal() { _floz_gal ${@} ; }
+## cups
+_cup_ml() { Times "${FUNCNAME:1}" "$1" '240' "$2" ; }
+_cup_tsp() { Times "${FUNCNAME:1}" "$1" '48' "$2" ; }
+_cup_tbsp() { Times "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_cup_floz() { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_cup_oz() { _cup_floz ${@} ; }
+_cup_pt() { Per "${FUNCNAME:1}" "$1" '2' "$2" ; }
+_cup_qt() { Per "${FUNCNAME:1}" "$1" '4' "$2" ; }
+_cup_l() { Per "${FUNCNAME:1}" "$1" '4.227' "$2" ; }
+_cup_gal() { Per "${FUNCNAME:1}" "$1" '16' "$2" ; }
+## pints
+_pt_ml() { Times "${FUNCNAME:1}" "$1" '473' "$2" ; }
+_pt_tsp() { Times "${FUNCNAME:1}" "$1" '96' "$2" ; }
+_pt_tbsp() { Times "${FUNCNAME:1}" "$1" '32' "$2" ; }
+_pt_floz() { Times "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_pt_oz() { _pt_floz ${@} ; }
+_pt_cup() { Times "${FUNCNAME:1}" "$1" '2' "$2" ; }
+_pt_qt() { Per "${FUNCNAME:1}" "$1" '2' "$2" ; }
+_pt_l() { Per "${FUNCNAME:1}" "$1" '2.113' "$2" ; }
+_pt_gal() { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+## quarts
+_qt_ml() { Times "${FUNCNAME:1}" "$1" '946.4' "$2" ; }
+_qt_tsp() { Times "${FUNCNAME:1}" "$1" '192' "$2" ; }
+_qt_tbsp() { Times "${FUNCNAME:1}" "$1" '64' "$2" ; }
+_qt_floz() { Times "${FUNCNAME:1}" "$1" '32' "$2" ; }
+_qt_oz() { _qt_floz ${@} ; }
+_qt_cup() { Times "${FUNCNAME:1}" "$1" '4' "$2" ; }
+_qt_pt() { Times "${FUNCNAME:1}" "$1" '2' "$2" ; }
+_qt_l() { Per "${FUNCNAME:1}" "$1" '1.057' "$2" ; }
+_qt_gal() { Per "${FUNCNAME:1}" "$1" '4' "$2" ; }
+## liters
+_l_ml() { Times "${FUNCNAME:1}" "$1" '1000' "$2" ; }
+_l_tsp() { Times "${FUNCNAME:1}" "$1" '200' "$2" ; }
+_l_tbsp() { Times "${FUNCNAME:1}" "$1" '67.63' "$2" ; }
+_l_floz() { Times "${FUNCNAME:1}" "$1" '33.81' "$2" ; }
+_l_oz() { _l_floz ${@} ; }
+_l_cup() { Times "${FUNCNAME:1}" "$1" '4.227' "$2" ; }
+_l_pt() { Times "${FUNCNAME:1}" "$1" '2.113' "$2" ; }
+_l_qt() { Times "${FUNCNAME:1}" "$1" '1.057' "$2" ; }
+_l_gal() { Per "${FUNCNAME:1}" "$1" '3.7854' "$2" ; }
+## gallons
+_gal_ml() { Times "${FUNCNAME:1}" "$1" '3785.4' "$2" ; }
+_gal_tsp() { Times "${FUNCNAME:1}" "$1" '768' "$2" ; }
+_gal_tbsp() { Times "${FUNCNAME:1}" "$1" '256' "$2" ; }
+_gal_floz() { Times "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_gal_oz() { _gal_floz ${@} ; }
+_gal_cup() { Times "${FUNCNAME:1}" "$1" '16' "$2" ; }
+_gal_pt() { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_gal_qt() { Times "${FUNCNAME:1}" "$1" '4' "$2" ; }
+_gal_l() { Times "${FUNCNAME:1}" "$1" '3.7854' "$2" ; }
+###
+
+### ( DENSITY )
+## g/cm3 == kg/L
+_gcm_kgl() { Times "${FUNCNAME:1}" "$1" '1' "$2" ; }
+_kgl_gcm() { Times "${FUNCNAME:1}" "$1" '1' "$2" ; }
+###
+
+### ( TEMPERATURE )
+## celcius (C)
+_c_f() { Maths "°${FUNCNAME:1}" "(($1 * (9/5)) + 32)" "$2" ; }
+_c_k() { Maths "${FUNCNAME:1}" "($1 + 273.15)" "$2" ; }
+## farenheight (F)
+_f_c() { Maths "°${FUNCNAME:1}" "(($1 - 32) * (5/9))" "$2" ; }
+_f_k() { Maths "${FUNCNAME:1}" "(($1 + 459.67) * (5/9))" "$2" ; }
+## Kelvin (K)
+_k_c() { Maths "°${FUNCNAME:1}" "($1 - 273.15)" "$2" ; }
+_k_f() { Maths "°${FUNCNAME:1}" "(($1 * (9/5)) - 459.67)" "$2" ; }
+###
+
+### ( PRESSURE )
+## pounds per square inch (psi)
+_psi_atm() { Times "${FUNCNAME:1}" "$1" '0.0680459637799' "$2" ; }
+_psi_torr() { Times "${FUNCNAME:1}" "$1" '51.7149324727' "$2" ; }
+## atmospheres (atm)
+_atm_psi() { Per "${FUNCNAME:1}" "$1" '0.0680459637799' "$2" ; }
+_atm_torr() { Times "${FUNCNAME:1}" "$1" '760' "$2" ; }
+## Torricelli (torr)
+_torr_psi() { Per "${FUNCNAME:1}" "$1" '51.7149324727' "$2" ; }
+_torr_atm() { Per "${FUNCNAME:1}" "$1" '760' "$2" ; }
+## Pascal (pascal)
+_pascal_torr() { Times "${FUNCNAME:1}" "$1" '133.322' "$2" ; } # pascal = torr × 133.322
+_pascal_atm() { Times "${FUNCNAME:1}" "$1" '101325' "$2" ; } # pascal = atm × 101325
+_torr_pascal() { Per "${FUNCNAME:1}" "$1" '133.322' "$2" ; }
+_atm_pascal() { Per "${FUNCNAME:1}" "$1" '101325' "$2" ; }
+## grams-force per square centimeter
+_psi_gfc() { Times "${FUNCNAME:1}" "$1" '70.3069578296' "$2" ; } # grams-force/centimeter^2
+_gfc_psi() { Per "${FUNCNAME:1}" "$1" '70.3069578296' "$2" ; }
+###
+
+### ( DATA )
+## bits
+_b_B() { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_b_Kb() { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_b_KB() { Per "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_b_Mb() { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_b_MB() { Per "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_b_Gb() { Per "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_b_GB() { Per "${FUNCNAME:1}" "$1" '8590000000' "$2" ; }
+_b_Tb() { Per "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_b_TB() { Per "${FUNCNAME:1}" "$1" '8796000000000' "$2" ; }
+_b_Pb() { Per "${FUNCNAME:1}" "$1" '1126400000000000' "$2" ; }
+_b_PB() { Per "${FUNCNAME:1}" "$1" '9007104000000000' "$2" ; }
+## Bytes
+_B_b() { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_B_Kb() { Per "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_B_KB() { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_B_Mb() { Per "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_B_MB() { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_B_Gb() { Per "${FUNCNAME:1}" "$1" '134200000' "$2" ; }
+_B_GB() { Per "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_B_Tb() { Per "${FUNCNAME:1}" "$1" '137400000000' "$2" ; }
+_B_TB() { Per "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_B_Pb() { Per "${FUNCNAME:1}" "$1" '140697600000000' "$2" ; }
+_B_PB() { Per "${FUNCNAME:1}" "$1" '1126400000000000' "$2" ; }
+## Kilo-bits
+_Kb_b()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Kb_B()  { Times "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_Kb_KB()  { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_Kb_Mb()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Kb_MB()  { Per "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_Kb_Gb()  { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Kb_GB()  { Per "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_Kb_Tb()  { Per "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_Kb_TB()  { Per "${FUNCNAME:1}" "$1" '8590000000' "$2" ; }
+_Kb_Pb()  { Per "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_Kb_PB()  { Per "${FUNCNAME:1}" "$1" '8796000000000' "$2" ; }
+## Kilo-Bytes
+_KB_b()  { Times "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_KB_B()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_KB_Kb()  { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_KB_Mb()  { Per "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_KB_MB()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_KB_Gb()  { Per "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_KB_GB()  { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_KB_Tb()  { Per "${FUNCNAME:1}" "$1" '134200000' "$2" ; }
+_KB_TB()  { Per "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_KB_Pb()  { Per "${FUNCNAME:1}" "$1" '137400000000' "$2" ; }
+_KB_PB()  { Per "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+## Mega-bits
+_Mb_b()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Mb_B()  { Times "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_Mb_Kb()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Mb_KB()  { Times "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_Mb_MB()  { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_Mb_Gb()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Mb_GB()  { Per "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_Mb_Tb()  { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Mb_TB()  { Per "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_Mb_Pb()  { Per "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_Mb_PB()  { Per "${FUNCNAME:1}" "$1" '8590000000' "$2" ; }
+## Mega-Bytes
+_MB_b()  { Times "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_MB_B()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_MB_Kb()  { Times "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_MB_KB()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_MB_Mb()  { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_MB_Gb()  { Per "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_MB_GB()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_MB_Tb()  { Per "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_MB_TB()  { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_MB_Pb()  { Per "${FUNCNAME:1}" "$1" '134200000' "$2" ; }
+_MB_PB()  { Per "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+## Giga-bits
+_Gg_b()  { Times "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_Gb_B()  { Times "${FUNCNAME:1}" "$1" '134200000' "$2" ; }
+_Gb_Kb()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Gb_KB()  { Times "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_Gb_Mb()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Gb_MB()  { Times "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_Gb_GB()  { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_Gb_Tb()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Gb_TB()  { Per "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_Gb_Pb()  { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Gb_PB()  { Per "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+## Giga-Bytes
+_GB_b()  { Times "${FUNCNAME:1}" "$1" '8590000000' "$2" ; }
+_GB_B()  { Times "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_GB_Kb()  { Times "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_GB_KB()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_GB_Mb()  { Times "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_GB_MB()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_GB_Gb()  { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_GB_Tb()  { Per "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_GB_TB()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_GB_Pb()  { Per "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_GB_PB()  { Per "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+## Tera-bits
+_Tb_b()  { Times "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_Tb_B()  { Times "${FUNCNAME:1}" "$1" '137400000000' "$2" ; }
+_Tb_Kb()  { Times "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_Tb_KB()  { Times "${FUNCNAME:1}" "$1" '134200000' "$2" ; }
+_Tb_Mb()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Tb_MB()  { Times "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_Tb_Gb()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Tb_GB()  { Times "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_Tb_TB()  { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_Tb_Pb()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Tb_PB()  { Per "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+## Tera-Bytes
+_TB_b()  { Times "${FUNCNAME:1}" "$1" '8796000000000' "$2" ; }
+_TB_B()  { Times "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_TB_Kb()  { Times "${FUNCNAME:1}" "$1" '8590000000' "$2" ; }
+_TB_KB()  { Times "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_TB_Mb()  { Times "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_TB_MB()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_TB_Gb()  { Times "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_TB_GB()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_TB_Tb()  { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+_TB_Pb()  { Per "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_TB_PB()  { Per "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+## Tera-bits
+_Pb_b()  { Times "${FUNCNAME:1}" "$1" '1126400000000000' "$2" ; }
+_Pb_B()  { Times "${FUNCNAME:1}" "$1" '140697600000000' "$2" ; }
+_Pb_Kb()  { Times "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_Pb_KB()  { Times "${FUNCNAME:1}" "$1" '137400000000' "$2" ; }
+_Pb_Mb()  { Times "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_Pb_MB()  { Times "${FUNCNAME:1}" "$1" '134200000' "$2" ; }
+_Pb_Gb()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_Pb_GB()  { Times "${FUNCNAME:1}" "$1" '131100' "$2" ; }
+_Pb_Tb()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_Pb_TB()  { Times "${FUNCNAME:1}" "$1" '128' "$2" ; }
+_Pb_PB()  { Per "${FUNCNAME:1}" "$1" '8' "$2" ; }
+## Tera-Bytes
+_PB_b()  { Times "${FUNCNAME:1}" "$1" '9007104000000000' "$2" ; }
+_PB_B()  { Times "${FUNCNAME:1}" "$1" '1126400000000000' "$2" ; }
+_PB_Kb()  { Times "${FUNCNAME:1}" "$1" '8796000000000' "$2" ; }
+_PB_KB()  { Times "${FUNCNAME:1}" "$1" '1100000000000' "$2" ; }
+_PB_Mb()  { Times "${FUNCNAME:1}" "$1" '8590000000' "$2" ; }
+_PB_MB()  { Times "${FUNCNAME:1}" "$1" '1074000000' "$2" ; }
+_PB_Gb()  { Times "${FUNCNAME:1}" "$1" '8389000' "$2" ; }
+_PB_GB()  { Times "${FUNCNAME:1}" "$1" '1049000' "$2" ; }
+_PB_Tb()  { Times "${FUNCNAME:1}" "$1" '8192' "$2" ; }
+_PB_TB()  { Times "${FUNCNAME:1}" "$1" '1024' "$2" ; }
+_PB_Tb()  { Times "${FUNCNAME:1}" "$1" '8' "$2" ; }
+#
+##
+### _Gb_ug() { curl -s 'https://superuser.com/questions/11423/how-much-does-a-gigabyte-worth-of-data-physically-weigh-on-a-hard-disk' | op '??~Areal Density' '#* = ' '%%\ *' '.( micrograms)' | tail -n1 ; }
+##
+#
+
+### The Glue
+[ -t 0 ] || One="$(cat -)"
+Fn="${One:=$1}_${Two:=${2:-$1}}"
+[[ -n $Two ]] || Usage 1
+[[ "${One//[!a-zA-Z]/}" != "${Two//[!a-zA-Z]/}" ]] || { echo "$One == $One" ; exit 1 ; }
+Fn="${Fn//[!a-zA-Z\_]/}"
+[[ -n "${One//[!0-9\.\(\-\+\*\/\%\^\)]/}" ]] || One=1
+if [[ "$Fn" == ?([kKmMgGtTpP])@([bB])\_?([kKmMgGtTpP])@([bB]) ]]; then
+	_${Fn^^[kmgtp]} "${One//[!0-9\.\(\-\+\*\/\%\^\)]/}" "${Two//[!0-9\.\(\-\+\*\/\%\^\)]/}"
+else
+	_${Fn,,} "${One//[!0-9\.\(\-\+\*\/\%\^\)]/}" "${Two//[!0-9\.\(\-\+\*\/\%\^\)]/}"
+fi
