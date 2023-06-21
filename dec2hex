@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Convert dec/dig/dex to hex
 [[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
     echo 'NAME:   dec2hex - decimal to hexadecimal'
     echo ""
