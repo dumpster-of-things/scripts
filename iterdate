@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+_Usage() {
+	echo "${@:2}"
+	[[ -n $2 ]] || {
+		echo 'NAME:'
+		echo '   iterdate - generate iteratable date-ranges'
+		echo ""
+	}
+	echo 'USAGE:'
+	echo "   ${0##*\/} [-options] {FROM_DATE} [{TO_DATE}]"
+	echo ""
+	[[ -n $2 ]] || {
+		echo 'DESCRIPTION:'
+		echo '   Gracefully generate accurate range(s) of datestrings ;'
+		echo '      ostensibly, to iterate over.'
+		echo '   {DATES} must be in `YYYYmmdd` format (ie: `date "+%Y%m%d"`).'
+		echo '   If ommited, {TO_DATE} defaults to the current date.'
+		echo ""
+		echo "OPTIONAL ARGUMENTS:"
+		echo ' ( need to be reworked, and reduced. )'
+		echo ' ( some were written more as an excersize; not to be practical, or even useful. )'
+		echo ' ( most can be combined, but some will depend on the order they are supplied. )'
+		echo ""
+		echo "   -h,                  Show this message."
+		echo '    --help'
+		echo ""
+		echo '   -f {FMT},                Specify custom datestring formatting;'
+		echo '    --format[= ]{FMT}        (understands, and in some cases extends,'
+		echo '                              the unix `date` "+%formatting" directives).'
+		echo '   -s {SEP},                Use {SEP} as field separator in formatting.'
+		echo '    --sep[arator][= ]{SEP}   (ie: "+%Y{SEP}%m{SEP}%d{SEP}%..." )'
+		echo '   -n                       Shorthand for "+%Y%m%d" output format.'
+		echo '   -l, -hr                  Output in a more human-readable format.'
+		echo '   -d,                      Use MixedCase when displaying days of the week.'
+		echo '    --d[ao][yw]              (ie: "+%^a" )'
+		echo '   -D,                      Use UPPERCASE when displaying days of the week.'
+		echo '    --D[ao][yw]              (ie: "%a" )'
+		echo ""
+		echo '   -i {DAY}, +{DAY},      Only include specific {DAY}(s) of the week.'
+		echo '    --include[= ]{DAY}'
+		echo '   -x {DAY}, -{DAY},      Exclude specific {DAY}(s) of the week.'
+		echo '    --exclude[= ]{DAY}'
+		echo '                       ( {DAY}(s): {[mon,tue,wed,thu,fri,sat,sun]}[,{...}] )'
+		echo ""
+		echo '   -v             Verbosity -1:(fully-noninclusive, bounded range         :: `{ 1.. -1 }` )'
+		echo '   [omitted]      Verbosity  0:(partially-bound, ending-inclusive range   :: `{ 1.. N }`  )'
+		echo '   +v             Verbosity  1:(optionally-bounded, fully-inclusive range :: `{ 0..[N] }` )'
+		echo ""
+	}
+	exit ${1:-0}
+}
+[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || _Usage
+
+declare -gx Fmt
+
+Days=( MON TUE WED THU FRI SAT SUN )
+Months=( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec )
+eval {Jan,Mar,May,Jul,Aug,Oct,Dec}=31 {Apr,Jun,Sep,Nov}=30 Feb=28
+_leapChk() { return $(( ${1:-$(date '+%Y')} % 4 == 0 ? 1 : 0 )); }
+_leapChk || Feb=29
+
+for ((a=1;a<=$#;a++)); do
+	case "${!a}" in
+	[\-\+][vV]) (( v = 0 ${!a::1} 1 )) ;;
+	\-[dD]|'--'[dD][aAoO][yYwW]) [[ "${!a##*\-}" == *[[:lower:]]* ]] && fDoW="%a" || fDoW="%^a" ;;
+	\-[lL]|'--long'|\-[hH][rR]|'--human-readable') [[ -z ${fDoW} ]] && Fmt="+%F${Sepr[2]:-${Sepr[1]:-${Sepr[0]:-_}}}%A" || Fmt="+%F${Sepr[2]:-${Sepr[1]:-${Sepr[0]:-_}}}${fDoW//\a/\A}" ;;
+	[\.\-\_\+][\.\-\_\+]) Fmt="+%Y${!a:0:1}%m${!a:1:1}%d" ;;
+	[\+\-][0-6]) [[ "${!a::1}" == \+ ]] && icl[${#icl[@]}]="${!a:1}" || xcl[${#xcl[@]}]="${!a:1}" ;;
+	[\+\-][0-6]\,*[0-6])
+		b=( $(echo "${!a:1}" | sed 's/,/\n/g') )
+		if [[ "${!a::1}" == '+' ]]; then
+			for ((i=0;i<${#b[@]};i++)); do
+				icl[${#icl[@]}]="${Days[${b[i]}]}"
+			done
+		else
+			for ((x=0;x<${#b[@]};x++)); do
+				xcl[${#xcl[@]}]="${Days[${b[x]}]}"
+			done
+		fi
+		;;
+	[\+\-][mMtTwWfFsS][oOuUeEhHrRaA][nNeEdDuUiItT]) [[ "${!a::1}" == "+" ]] && icl[${#icl[@]}]="${!a:1}" || xcl[${#xcl[@]}]="${!a:1}" ;;
+	[\+\-][mMtTwWfFsS][oOuUeEhHrRaA][nNeEdDuUiItT]\,*[nNeEdDuUiItT])
+		b=( $(echo "${!a:1}" | sed 's/,/\n/g') )
+		if [[ "${!a::1}" == '+' ]]; then
+			for ((i=0;i<${#b[@]};i++)); do
+				icl[${#icl[@]}]="${b[i]^^}"
+			done
+		else
+			for ((x=0;x<${#b[@]};x++)); do
+				xcl[${#xcl[@]}]="${b[x]^^}"
+			done
+		fi
+		;;
+	[\.\-\_\+][\.\-\_\+][\.\-\_\+]) Sepr=( "${!a:0:1}" "${!a:1:1}" "${!a:2:1}" ) ;; #( depricated, to be removed )
+	\-[iI]|'--include'*) [[ -z ${!a/*\=*} ]] || ((++a)) ; icl="${!a//[![:alpha:]]/}" ;;
+	\-[xX]|'--exclude'*) [[ -z ${!a/*\=*} ]] || ((++a)) ; xcl="${!a//[![:alpha:]]/}" ;;
+	\-[fF]|\-*[fF][mM][tT]|'--format'*) [[ -z ${!a/*\=*} ]] || ((++a)) ; Fmt="${!a#*\=}" ;;
+	\-[sS]|*'-sep'|\-\-sep[ea]rat[eo]r*) [[ -z "${!a/*\=*}" ]] || ((++a)) ; Sepr=( $(range "${!a#*\=}") ) ;;
+	\-[nN]) Fmt='+%Y%m%d' ;;
+	*)
+		if [[ "${!a}" != *[!0-9\-]* ]]; then
+			(( ${#dateRange[@]} < 2 )) && dateRange[${#dateRange[@]}]="${!a//[![:digit:]]/}" || _Usage 3 '[Error]: Too many dates.'
+		fi
+	esac
+done
+
+if [[ -z ${Fmt} ]]; then
+	Fmt="+%Y${Sepr[0]:-}%m${Sepr[1]:-${Sepr[0]:-}}%d"
+else
+	fmt="${Fmt#*\%}" && fmt=( ${fmt//\%/${IFS}\%} ) && Fmt="+%${fmt[0]}"
+	for ((f=1;f<${#fmt[@]};f++)); do Fmt="${Fmt}${Sepr[f-1]:-}${fmt[f]}" ; done
+fi
+
+(( ${#dateRange[0]} == 8 )) || _Usage 1 '[Error]: Malformed date(s).'
+fromDate=${dateRange[0]} && toDate=${dateRange[1]:-$(date '+%Y%m%d')}
+[[ "${Year[${#Year[@]}]:=${fromDate::4}}" != "${Year[${#Year[@]}]:=${toDate::4}}" ]] || unset Year[-1]
+for y in ${Year[@]} ; do
+	_leapChk "${y::4}" || Feb=29
+done
+for d in $fromdDate $toDate ; do
+	if [[ ${d:4:4} == 0229 ]]; then 
+		[[ $Feb == 29 ]] || { echo 'line ~105: Feb not 29' ; exit 6 ; }
+	fi
+done
+whens() { date ${2:-${Fmt:-'+%F_%^a'}} -d "${1:-$(date '+%F')}" ; }
+dayow() { date '+%^a' -d "${1:-$(date '+%F')}" ; }
+chkds() {
+	if [[ -z ${icl} && -z ${xcl} ]]; then
+		whens "${1}" ; return $?
+	else
+		local Match=false
+		if [[ -n ${icl} ]]; then
+			for ((i=0;i<${#icl[@]};i++)); do
+				DoW="${icl[i]::3}"
+				[[ "$(dayow ${1})" == "${DoW^^}" ]] || continue
+				whens "${1}" ; break
+			done
+			return 0
+		fi
+		if [[ -n ${xcl} ]]; then
+			for ((x=0;x<${#xcl[@]};x++)); do
+				DoW="${xcl[x]::3}"
+				[[ "$(dayow ${1})" == "${DoW^^}" ]] || continue
+				Match=true ; break
+			done
+			[[ $Match == true ]] || whens "${1}"
+			return 0
+		fi
+	fi
+}
+
+(( v < 1 )) || chkds "${fromDate::4}-${fromDate:4:2}-${fromDate:6}"
+for (( y = Year[0] ; y <= Year[-1] ; y++ )); do
+	_leapChk "${y}" || Feb=29
+	for (( m = 1 ; m <= ${#Months[@]} ; m++ )) ; do
+		month="$(printf '%02d' "${m}")"
+		for (( d = 1 ; d <= ${!Months[m-1]} ; d++ )); do
+			day="$(printf '%02d' "${d}")"
+			YMD="${y}${month}${day}" 
+			(( YMD <= ${fromDate} || YMD >= ${toDate} )) || chkds "${y}-${month}-${day}"
+		done
+	done
+done
+(( v < 0 )) || chkds "${toDate::4}-${toDate:4:2}-${toDate:6}"
