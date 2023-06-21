@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+[[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo 'NAME:'
+	echo '   math - an omnidirectional wrapper for `bc`'
+	echo 'USAGE:'
+	echo '   [ input | ]  math  [ input ]'
+	echo 'DESCRIPTION:'
+	echo '   Valid inputs are any combination of numbers and operators recognized by `bc`.'
+	echo 'EXAMPLE:'
+	echo '   `echo "(9*9" | math ") - 0.314 + 6" | math /3.`'
+	echo ""
+	exit 0
+}
+n=$({ [ ! -t 0 ] && echo "$(cat -) ${@}" || echo "${@}" ; } | bc -l)
+[[ "$n" != *\.* ]] || { until [[ "${n: -1}" != 0 ]]; do n="${n:: -1}" ; done ; [[ "$n" != *\. ]] || n="${n:: -1}" ; }
+echo "$n"
