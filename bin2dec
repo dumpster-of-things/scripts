@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 [[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
     echo 'NAME:   bin2dec - binary to decimal
+    echo ""
     echo 'USAGE:'
-	echo "   [ {binary.address} ... | ] ${0##*\/} [-option] [ {binary.address} ... ]"
+	echo "   [ {binary numbers} ... | ] ${0##*\/} [-option] [ {binary numbers} ... ]"
+	echo ""
 	echo 'DESCRIPTION:'
-	echo '   Converts binary to decimal.'
+	echo '   Converts binary numbers into their [dot-]decimal equivalents.'
 	echo '   Input may be supplied from either direction.'
-	echo '   If the input binary string contains any characters other than 1 and 0, they are treated as 0.'
+	echo '   If the input contains any characters other than 1 and 0, they are treated as 0.'
+	echo '   This script is the counterpart to the `dec2bin` command.'
+	echo ""
 	echo 'OPTIONAL ARGUMENTS'
 	echo '   -h,         show this message.'
 	echo '    --help'
