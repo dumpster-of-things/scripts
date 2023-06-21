@@ -13,7 +13,7 @@ Usage() {
     echo '      into [optionally variable quantities] of another.'
 	echo '   Note that, for more exotic calculations, a quantity of {TO} units may be specified;'
 	echo "     and `${0##*\/}` will handle the math for you."
-    echo '   When no quantity(N) is supplied with a {UNIT}, it defaults to 1 of said {UNIT}.
+    echo '   When no quantity(N) is supplied with a {UNIT}, it defaults to 1 of said {UNIT}.'
     echo ""
 	[[ "${2}" == *(\-)@([uU][nN][iI][tT])?([sS]) ]] || { echo " ( For a list of supported units, include the --units flag )" ; exit ${1:-0} ; }
 	echo "* UNITS:"
