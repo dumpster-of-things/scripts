@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Convert dec/dig/dex to hex
+[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+    echo 'NAME:   dec2hex - decimal to hexadecimal'
+    echo ""
+    echo 'USAGE:'
+    echo "   [ {decimal numbers} ... | ] ${0##*\/} [ {decimal numbers} ... ]"
+    echo ""
+    echo 'DESCRIPTION:'
+    echo '   Converts decimal numbers (ie: 0-256) into their hexadecimal equivalents.'
+    echo '   Input(s) may be supplied from either, or both, directions'
+    echo '      and are processed in the order they were received.'
+    echo '   This script is the counterpart to the `hex2dec` command.'
+    echo ""
+    exit 0
+}
+while read number ; do
+    printf '%x\n' "$number"
+done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo " ${!a}" ; done )
