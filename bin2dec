@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 [[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
-    echo 'NAME:   bin2dec - binary to decimal
+    echo 'NAME:   bin2dec - binary to decimal'
     echo ""
     echo 'USAGE:'
 	echo "   [ {binary numbers} ... | ] ${0##*\/} [-option] [ {binary numbers} ... ]"
