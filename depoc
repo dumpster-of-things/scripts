@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo 'USAGE:'
+	echo '   Method 1:   {epoc-datestring} | depoc [formatting]'
+	echo '   Method 2:   depoc {$1: epoc-datestring} [$2: formatting]'
+	echo "DESCRIPTION:"
+	echo '   Converts an epoc-datestring (`date "+%s.%3N"`) into another format.'
+	echo '   The default is a more human readable format: "%Y-%m-%d%^a%H:%M:%S.%3N%Z"'
+	echo '   Any valid formatting (recognized by the `date` command) may optionally be specified.'
+	echo '   If used, custom formatting must be supplied as the last argument.'
+	echo '   This script is the counterpart to the `epoc` command.'
+	echo ""
+	exit 0
+}
+[ -t 0 ] && { (( $# == 0 )) && ${0} --help || date ${2:-'+%Y-%m-%d%^a%H:%M:%S.%3N%Z'} --date="@${1}" ; } || { date ${@:-'+%Y-%m-%d%^a%H:%M:%S.%3N%Z'} --date="@$(cat -)" ; }
