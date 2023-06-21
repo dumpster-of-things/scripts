@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+[[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
+    echo 'NAME:   bin2dec - binary to decimal
+    echo 'USAGE:'
+	echo "   [ {binary.address} ... | ] ${0##*\/} [-option] [ {binary.address} ... ]"
+	echo 'DESCRIPTION:'
+	echo '   Converts binary to decimal.'
+	echo '   Input may be supplied from either direction.'
+	echo '   If the input binary string contains any characters other than 1 and 0, they are treated as 0.'
+	echo 'OPTIONAL ARGUMENTS'
+	echo '   -h,         show this message.'
+	echo '    --help'
+	echo '   -v,         verbose output'
+	echo '    --verbose   ("{input} :  {output}")'
+	echo ""
+	exit 0
+}
+b2d() {
+	local decimal
+	local -ai Decimal
+	local -i n=0
+	Bits=( 128 64 32 16 8 4 2 1 )
+	for d in ${@//\./$IFS} ; do
+		for ((i=0;i<8;i++)); do 
+			[[ ${d:i:1} != 1 ]] || (( Decimal[n] += Bits[i] ))
+		done
+		((++n))
+	done
+	echo "${Decimal[0]:-0}.${Decimal[1]:-0}.${Decimal[2]:-0}.${Decimal[3]:-0}"
+}
+case "${1//\-/}" in
+[vV]|[vV][eE][rR][bB][oO][sS][eE]) while read ip ; do echo "$ip $(b2d $ip)" ; done < <([ -t 0 ] || cat - ; for ((a=2;a<=$#;a++)); do echo "${!a}" ; done ) | column -t ;;
+*) while read ip ; do b2d "$ip" ; done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a}" ; done )
+esac
