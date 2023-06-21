@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+    echo 'NAME:   hex2dec - hexadecimal to decimal'
+    echo ""
+    echo 'USAGE:'
+    echo "   [ {hexadecimal numbers} ... | ] ${0##*\/} [ {hexadecimal numbers} ... ]"
+    echo ""
+    echo 'DESCRIPTION:'
+    echo '   Converts hexadecimal numbers into their decimal equivalents.'
+    echo '   Input(s) may be supplied from either, or both, directions'
+    echo '      and are processed in the order they were received.'
+    echo '   This script is the counterpart to the `dec2hex` command.'
+    echo ""
+    exit 0
+}
+while read number ; do
+    printf '%d\n' 0x$number
+done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo " ${!a}" ; done )
