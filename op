@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+_dipset() {
+	_1() {
+		echo -e "\e[1;32mUSAGE\e[0;32m:\e[0m"
+		echo "   Can accept input through a pipe [AND/OR] from a file:"
+		echo "         whatevs | ${0##*\/} 'FILTER-EXPRESSION(s)' '...' [FILENAME]"
+		echo -e "   \e[1;4;33mOR\e[0m passed verbatim as \`\$1\`:"
+		echo "         ${0##*\/} 'whatevs' 'EXPRESSION'..."
+		echo ""
+	}
+	_0() {
+		_1
+		echo '   * EXPRessions are applied'
+		echo '            - in the order they were passed,'
+		echo '            - on each line (unless otherwise specified)'
+		echo ""
+		echo -e "\e[1;32mBASH BUILT-IN EXPANSIONS\e[0;32m:\e[0;37m (do what you'd expect)\e[0m"
+		echo "  ':N'        : from Nth to last char(s)"
+		echo "  '::N'       : from first to Nth char(s)"
+		echo "  ':N:N'      : from Nth to Nth char(s)"
+		echo "  '%...*'     : preceding first of ..."
+		echo "  '%%...*'    : preceding all of"
+		echo "  '#*...'     : after first of ..."
+		echo "  '##*...'    : after any of ..."
+		echo "  '/w/[e]'    : replace first of 'w' with ['e']"
+		echo "  '//w/[e]'   : replace each of 'w' with ['e']"
+		echo "  '^'         : '/[:lower:]/[:upper:]' (char[0] only)"
+		echo "  '^^'        : '//[:lower:]/[:upper:]'"
+		echo "  ','         : '/[:upper:]/[:lower:]' (char[0] only)"
+		echo "  ',,'        : '//[:upper:]/[:lower:]'"
+		echo "  '~[C]'      : swap case of first [optionally specified] character(s)."
+		echo "  '~~[c]'     : swap case of all [optionally specified] character(s)."
+		echo ""
+		echo -e "\e[1;32mFILTERING & CONDITIONAL EXPRESSIONS\e[0;32m:\e[0m"
+		echo "  '??[=|~]_'        : Supress lines not [matching|containing] _"
+		echo "  '?![=|~]_'        : Supress lines [matching|containing] _"
+		echo "  '??[=|~]_.{EXPR}' : Apply EXPR to lines [matching|containing] _"
+		echo "  '?![=|~]_.{EXPR}' : Apply EXPR to lines not [matching|containing] _"
+		echo '      examples:'
+		echo "         ... | op '??=*whatev*' supresses lines not matching *'whatev'*"
+		echo "         ... | op '?!~whatev' supresses lines containing 'whatev'"
+		echo "         ... | op '??~whatev.{(_).}' prepends all lines containing 'whatev' with '_'"
+		echo ""
+		echo -e "\e[1;32mMISCELLANEOUS EXPRESSIONS\e[0;32m:\e[0m"
+		echo '  -[BP],'
+		echo '    --before,'
+		echo '    --prepend _'
+		echo "          '(_).'    : Prepend each line with _"
+		echo ""
+		echo '  -A,'
+		echo '   --after,'
+		echo '   --append _'
+		echo "        '.(_)'      : Append _ to each line"
+		echo ""
+		echo " '{N}.*'    : Repeatedly apply *(any other exression, expansion, or filter) N times."
+		echo ""
+		echo '   -[cC],   : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
+		echo '   --color=                      but any `\e[...` expression should work)'
+		echo '                  examples:'
+		echo "                    ... | op -c '1;33'"
+		echo "                    ... | op --color=33"
+		echo ""
+		echo "  \"//w/*\$'\\n'*\" : Replace each of 'w' with *newline*"
+		echo ""
+		echo "  \"//\$'\\n'/*\"   : Remove or replace newlines with [*| ]"
+	}
+	_${1:-0}
+	exit ${1:-0}
+}
+
+[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || _dipset
+
+declare -g String
+declare -ga Strings
+
+exactly() {
+	_0() { [[ "${String}" == ${@} ]] ; }
+	_1() { [[ "${String}" != ${@} ]] ; }
+	_${1} "${@:2}"
+}
+
+fuzzily() {
+	_0() { [[ "${String}" == *"${@}"* || "${@}" == *"${String}"* || "${String}" == *${@}* || ${@} == *"${String}"* ]] ; }
+	_1() { [[ "${String}" != *"${@}"* && "${@}" != *"${String}"* && "${String}" != *${@}* && ${@} != *"${String}"* ]] ; }
+	_${1} "${@:2}"
+}
+
+dp() { while read item ; do Array[${#Array[@]}]="$item" ; done < <(for ((x=1;x<=$#;x++)); do echo "${!x}" ; done ; [ -t 0 ] || cat - ) ; local IFS=\| ; echo "${Array[*]}" ; }
+
+OtherPipe() {
+	local -a Argz string
+	while read line ; do
+		String="${line}"
+		for ((a=1;a<=$#;a++)); do
+			case "${!a}" in
+			*\/*"$'\n'"*\/*) if [[ "${!a##*\/}" == *[!\ ]* ]]; then cat - | dp "$String" | ${FUNCNAME} "//\|/'${!a##*\/}'" "${@:$a+1}" ; else { echo "$String" ; cat - ; } | xargs | ${FUNCNAME} "${@:$a+1}" ; fi ; unset String ;;
+			\/*[!\/]*\/*"$'\n'"*) eval Strings\=\( $(eval printf '%q' \"\$\{String"${!a}"\}\") \) ; unset String ;;
+			[\_\.]\(*\)) String="${String}${!a:2: -1}" ;;
+			\-[bB]*|\-\-[bp][er][fe][op][re][en]*) [[ -z "${!a//*\=*}" ]] || ((++a)) ; String="${!a#*\=}${String}" ;;
+			\(*\)[\.\_]) String="${!a:1: -2}${String}" ;;
+			\-[aA]|\-\-a[pf][pt][e][nr]*) [[ -z "${!a/*\=*/}" ]] || ((++a)) ; String="${String}${!a#*\=}" ;;
+			\-[cC]|'--color'*) [[ -z "${!a//*\=*/}" ]] || ((++a)) ; String=$(echo -e "\e[${!a#*\=}m${String}\e[0m") ;;
+			\?\?\=*[!\}]) exactly "0" "${!a:3}" || { unset String ; break ; } ;;
+			\?\!\=*[!\}]) exactly "1" "${!a:3}" || { unset String ; break ; } ;;
+			\?\?\~*[!\}]) fuzzily "0" "${!a:3}" || { unset String ; break ; } ;;
+			\?\!\~*[!\}]) fuzzily "1" "${!a:3}" || { unset String ; break ; } ;;
+			\?\?\=*\.\{*\}) onDo="${!a#*\.\{}" && exactly "1" "${!a:3: -${#onDo}-2}" ||  { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
+			\?\!\=*\.\{*\}) onDo="${!a#*\.\{}" && exactly "0" "${!a:3: -${#onDo}-2}" || { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
+			\?\?\~*\.\{*\}) onDo="${!a#*\.\{}" && fuzzily "1" "${!a:3: -${#onDo}-2}" || { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
+			\?\!\~*\.\{*\}) onDo="${!a#*\.\{}" && fuzzily "0" "${!a:3: -${#onDo}-2}" || { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
+			*)
+				if [[ "${!a}" == \{+([[:digit:]])\}\.* ]]; then
+					rp="${!a%%\}*}" && ((rt=(${rp:1} + 0)))
+					for ((ri=0;ri<rt;ri++)); do
+						String=$(echo "${String}" | ${FUNCNAME} "${!a#*\}\.}")
+					done
+					unset rp rt ri
+				else
+					eval String\=\$\{String"${!a}"\}
+				fi
+			esac
+			if (( ${#Strings[@]} != 0 )); then
+				for ((i=0;i<${#Strings[@]};i++)); do
+					echo "${Strings[i]}"
+				done | ${0} "${@:$a+1}"
+				unset Strings[*]
+				continue
+			fi
+			(( ${#String} > 0 )) || break
+		done
+		(( ${#String} == 0 )) || echo "${String}"
+	done < <(cat - )
+}
+
+[[ -f "${!#-1}" && $# -gt 1 ]] && { [ -t 0 ] && { cat "${!#-1}" | OtherPipe "${@::$#}" ; } || { cat "${!#-1}" - | OtherPipe "${@::$#}" ; } ; } || { [ -t 0 ] && { echo "${1}" | OtherPipe "${@:2}" ; } || { cat - | OtherPipe "${@}" ; } ; } 2>/dev/null
