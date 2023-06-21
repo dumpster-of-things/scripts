@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+[[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo 'NAME:   dec2bin - decimal to binary'
+	echo ""
+	echo 'USAGE:'
+	echo "   [ {decimal} | ] ${0##*\/} [-option] [ {decimal} ]"
+	echo ""
+	echo 'DESCRIPTION:'
+	echo '   Converts decimal numbers (ie: dot-decimal notated ip addresses) into their binary equivalent.'
+	echo '   Input may be supplied from both directions.'
+	echo '   This script is the counterpart to the `bin2dec` command.'
+	echo ""
+	echo 'OPTIONAL ARGUMENTS'
+	echo '   -h,         show this message.'
+	echo '    --help'
+	echo '   -v,         verbose output'
+	echo '    --verbose   ("{input} :  {output}")'
+	echo ""
+	exit 0
+}
+d2b() {
+	local Binary
+	for d in ${@//\./$IFS} ; do
+		for i in 128 64 32 16 8 4 2 1 ; do
+			((d>=i)) && { Binary+='1' && ((d-=i)) ; } || Binary+='0'
+		done
+		Binary="${Binary:: -1}."
+	done
+	echo "${Binary:: -1}"
+}
+case "${1//\-/}" in
+[vV]|[vV][eE][rR][bB][oO][sS][eE]) while read ip ; do echo "$ip $(d2b $ip)" ; done < <([ -t 0 ] || cat - ; for ((a=2;a<=$#;a++)); do echo "${!a}" ; done ) | column -t ;;
+*) while read ip ; do d2b "$ip" ; done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a}" ; done )
+esac
