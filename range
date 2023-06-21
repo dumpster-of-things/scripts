@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo 'NAME:'
+	echo '   range - transmogrify input streams'
+	echo ""
+	echo 'USAGE:'
+	echo "   [inputs... |] ${0##*\/} [--options] ['other' 'inputs' 'or whatever' ...]"
+	echo ""
+	echo 'DESCRIPTION:'
+	echo "   By default, ${0##*\/} splits all input into ranges of characters, output as a single array."
+	echo '   This default behavior, as well as the output format, can optionally be altered.'
+	echo ""
+	echo 'OPTIONAL PARAMETERS'
+	echo ' (if used, must precede other inputs.)'
+	echo '   -[s|l],            Supress default behavior and'
+	echo '    --[string|line]    combine output onto a single line.'
+	echo '   -d {DELIM},                 Denotate separate inputs by'
+	echo '    --delim[eter][= ]{DELIM}    inserting {DELIM} between them.'
+	echo '                                * {DELIM} may be any non-empty string of character(s).'
+	echo ""
+	exit 0
+}
+
+# dependency check
+[[ -x $(which op) ]] || {
+	echo ' * MISSING DEPENDENCY:   `op` ( https://github.com/dumpster-of-things/otherpipe )'
+	read -p "Install? (y/n): " getDepends </dev/tty || getDepends="No"
+	[[ "$getDepends" == @([yY])?([eE][sS]) ]] || exit 0
+	mkdir -p "${HOME:=/home/${USER:=$(whoami)}}/bin"
+	for Cmd in 'curl -s -o' 'wget -q -O' ; do
+		[[ ! -x $(which "${Cmd%%\ *}") ]] || { $Cmd "$HOME/bin/op" "https://raw.githubusercontent.com/dumpster-of-things/otherpipe/main/op" && break ; }
+	done
+	[[ -f "$HOME/bin/op" ]] && chmod 755 "$HOME/bin/op" || { echo 'Failed to install `op`...' ; exit 1 ; }
+}
+
+# scan input for optional parameters 
+for ((a=1;a<=$#;a++)); do
+	case "${!a}" in
+	'-d'|'--delim'*) [[ "${!a}" == *\=* ]] || ((++a)) ; ((x=a)) ; Delim="${!a/*\=/}" ;;
+	\-[sl]|'--string'|'--line') ((x=a)) ; Str=true ;;
+	*) continue
+	esac
+done
+
+# generate output
+if [[ $Str ]]; then
+	# string-mode
+	if [[ -z "$Delim" ]]; then
+		{ [ -t 0 ] || cat - ; printf "%s\n" "${@:x+1}" ; } | op "//$'\n'/_-@:@-_" '//_-@:@-_/'
+	else
+		{ [ -t 0 ] || cat - ; printf "%s\n" "${@:x+1}" ; } | op "//$'\n'/$Delim"
+	fi
+else
+	## default-mode
+	if [[ -z "$Delim" ]]; then
+		while read line ; do
+			for ((i=0;i<${#line};i++)); do
+				echo "${line:i:1}"
+			done
+		done < <([ -t 0 ] || cat - ; printf "%s\n" "${@:x+1}" )
+	else		
+		while read line ; do
+			for ((i=0;i<${#line};i++)); do
+				echo "${line:i:1}"
+			done
+			echo "$Delim"
+		done < <([ -t 0 ] || cat - ; printf "%s\n" "${@:x+1}" ) | head -n-1
+	fi
+fi
