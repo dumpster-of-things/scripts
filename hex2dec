@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+
 [[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
-    echo 'NAME:   hex2dec - hexadecimal to decimal'
+    echo 'NAME:   hex2dec - convert hexadecimal to decimal'
     echo ""
     echo 'USAGE:'
     echo "   [ {hexadecimal numbers} ... | ] ${0##*\/} [ {hexadecimal numbers} ... ]"
@@ -13,6 +14,7 @@
     echo ""
     exit 0
 }
+
 while read number ; do
     printf '%d\n' 0x$number
 done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo " ${!a}" ; done )
