@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+
 [[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
-    echo 'NAME:   bin2dec - binary to decimal'
+    echo 'NAME:   bin2dec - convert binary to decimal'
     echo ""
     echo 'USAGE:'
 	echo "   [ {binary numbers} ... | ] ${0##*\/} [-option] [ {binary numbers} ... ]"
@@ -19,6 +20,7 @@
 	echo ""
 	exit 0
 }
+
 b2d() {
 	local decimal
 	local -ai Decimal
@@ -32,7 +34,8 @@ b2d() {
 	done
 	echo "${Decimal[0]:-0}.${Decimal[1]:-0}.${Decimal[2]:-0}.${Decimal[3]:-0}"
 }
-case "${1//\-/}" in
-[vV]|[vV][eE][rR][bB][oO][sS][eE]) while read ip ; do echo "$ip $(b2d $ip)" ; done < <([ -t 0 ] || cat - ; for ((a=2;a<=$#;a++)); do echo "${!a}" ; done ) | column -t ;;
+
+case "${1}" in
+\-[vV]|\-\-[vV][eE][rR][bB][oO][sS][eE]) while read ip ; do echo "$ip $(b2d $ip)" ; done < <([ -t 0 ] || cat - ; for ((a=2;a<=$#;a++)); do echo "${!a}" ; done ) | column -t ;;
 *) while read ip ; do b2d "$ip" ; done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a}" ; done )
 esac
