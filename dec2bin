@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+
 [[ "${1}" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
-	echo 'NAME:   dec2bin - decimal to binary'
+	echo 'NAME:   dec2bin - convert decimal to binary'
 	echo ""
 	echo 'USAGE:'
 	echo "   [ {decimal} | ] ${0##*\/} [-option] [ {decimal} ]"
@@ -18,6 +19,7 @@
 	echo ""
 	exit 0
 }
+
 d2b() {
 	local Binary
 	for d in ${@//\./$IFS} ; do
@@ -28,7 +30,8 @@ d2b() {
 	done
 	echo "${Binary:: -1}"
 }
-case "${1//\-/}" in
-[vV]|[vV][eE][rR][bB][oO][sS][eE]) while read ip ; do echo "$ip $(d2b $ip)" ; done < <([ -t 0 ] || cat - ; for ((a=2;a<=$#;a++)); do echo "${!a}" ; done ) | column -t ;;
+
+case "${1}" in
+\-[vV]|\-\-[vV][eE][rR][bB][oO][sS][eE]) while read ip ; do echo "$ip $(d2b $ip)" ; done < <([ -t 0 ] || cat - ; for ((a=2;a<=$#;a++)); do echo "${!a}" ; done ) | column -t ;;
 *) while read ip ; do d2b "$ip" ; done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a}" ; done )
 esac
