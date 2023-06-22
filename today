@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo 'NAME:'
+	echo '   today - a day of a week'
+	echo 'USAGE:'
+	echo '   `today  [{datestring}]  [ [-|+][ ]{N} ]`'
+	echo '   `{datestring} | today  [ [-|+][ ]{N} ]`'
+	echo 'DESCRIPTION:'
+	echo '   Input is not mandatory.'
+	echo '   By default, `today` outputs the current "{weekday} {datestring}".'
+	echo '   A specific {datestring} may either be piped in, or supplied as $1'
+    echo '   An offset may be specified as [-|+][ ][N]'
+	echo '         ( ie:   {N} days [before|after] {date} )'
+	echo '   If an offset is specified, it must be the last argument.'
+	echo ""
+	exit 0
+}
+
+[ -t 0 ] && {
+	case "${1}" in
+	[\-\+]*)
+		(($#>1)) && {
+			date '+%A %Y.%m.%d' --date="@$(($(epoc | cut -d\. -f1) $1 $((${@:2}*24*60*60))))"
+		} || {
+			date '+%A %Y.%m.%d' --date="@$(($(epoc | cut -d\. -f1) ${1::1} $((${1:1}*24*60*60))))"
+		} ;;
+	[0-9]*)
+		(($#>1)) && {
+			(($#>2)) && {
+				date '+%A %Y.%m.%d' --date="@$(($(epoc $1 | cut -d\. -f1) $2 $((${@:3}*24*60*60))))"
+			} || {
+				date '+%A %Y.%m.%d' --date="@$(($(epoc $1 | cut -d\. -f1) ${2::1} $((${2:1}*24*60*60))))"
+			}
+		} || {
+			date '+%A %Y.%m.%d' --date="@$(epoc $1 | cut -d\. -f1)"
+		} ;;
+	*) date '+%A %Y.%m.%d'
+	esac
+} || {
+	case "${1}" in
+	[\-\+]*)
+		(($#>1)) && {
+			date '+%A %Y.%m.%d' --date="@$(($(cat - | epoc | cut -d\. -f1) $1 $((${@:2}*24*60*60))))"
+		} || {
+			date '+%A %Y.%m.%d' --date="@$(($(cat - | epoc | cut -d\. -f1) ${1::1} $((${1:1}*24*60*60))))"
+		} ;;
+	*) date '+%A %Y.%m.%d' --date="@$(cat - | epoc | cut -d\. -f1)"
+	esac
+}
