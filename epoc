@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-[[ "${1}" != +(\-)@([hH])?([eE])?([lL])?([pP]) ]] || {
+[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
 	echo 'USAGE:  [{datestring} |] epoc [{datestring}]'
 	echo 'DESCRIPTION:'
 	echo '   Converts any valid datestring into the equivilant epoc-datestring( seconds since 1970−01−01 00:00:00 UTC ).'
