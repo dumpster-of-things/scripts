@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+    echo 'NAME:'
+    echo '   url - encode or decode urls'
+    echo 'USAGE:'
+    echo '   `url {[encode|decode]} {url}`'
+    echo '   `{url} | url {[encode|decode]}`'
+    echo 'POTPOURRI:'
+    echo '   `alias urlencode="url encode"`'
+    echo '   `alias urldecode="url decode"`'
+    echo ""
+    exit 0
+}
+
+_encode() {
+    local LC_ALL=C
+    for ((i=0;i<${#1};i++)); do
+        : "${1:i:1}"
+        case "$_" in
+        [a-zA-Z0-9.~_-]) printf '%s' "$_" ;;
+        *) printf '%%%02X' "'$_"
+        esac
+    done
+    printf '\n'
+}
+
+_decode() { 
+    : "${1//+/ }"
+    printf '%b\n' "${_//%/\\x}"
+}
+
+[ -t 0 ] || _${1} "$(cat -)"
+(( $# < 2 )) || _${1} "${@:2}"
