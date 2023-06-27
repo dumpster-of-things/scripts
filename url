@@ -4,12 +4,14 @@
     echo 'NAME:'
     echo '   url - encode or decode urls'
     echo 'USAGE:'
-    echo '   `url {[encode|decode]} {url}`'
-    echo '   `{url} | url {[encode|decode]}`'
+    echo '   `url {[encode|decode]} input...`'
+    echo '   `input... | url {[encode|decode]}`'
     echo 'POTPOURRI:'
     echo '   `alias urlencode="url encode"`'
     echo '   `alias urldecode="url decode"`'
-    echo ""
+    echo '   or'
+    echo '   `ln -s [PATH/TO/bin]/url [PATH/TO/bin]/urlencode`'
+    echo '   `ln -s [PATH/TO/bin]/url [PATH/TO/bin]/urldecode`'
     exit 0
 }
 
@@ -30,5 +32,11 @@ _decode() {
     printf '%b\n' "${_//%/\\x}"
 }
 
-[ -t 0 ] || _${1} "$(cat -)"
-(( $# < 2 )) || _${1} "${@:2}"
+if [[ "${0##*\/}" == "url" ]]; then
+    [ -t 0 ] || _${1} "$(cat -)"
+    (( $# < 2 )) || _${1} "${@:2}"
+else
+    # ln -s .../bin/url ../bin/url{encode,decode}
+    [ -t 0 ] || _${0##*\/url} "$(cat -)"
+    (( $# < 1 )) || _${0##*\/url} "${@:1}"
+fi
