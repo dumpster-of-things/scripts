@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+[[ "$1" != +(\-)@([hH])?([eE][l][pP]) ]] || { echo 'NAME:   reverse - is what it does' ; echo 'USAGE:   `[ input... | ] reverse  [ input... ]`' ; exit 0 ; }
+while read i ; do unset x ; for ((n=${#i}-1;n>=0;n--)); do x+="${i:$n:1}" ; done ; echo "$x" ; done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a}" ; done )
