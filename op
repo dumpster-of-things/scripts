@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
 	echo -e "\e[1;32mNAME\e[0;32m:\e[0m"
 	echo '   op - otherpipe'
 	echo -e "\e[1;32mUSAGE\e[0;32m:\e[0m"
