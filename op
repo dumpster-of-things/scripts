@@ -55,11 +55,12 @@
 		echo '   --append _'
 		echo "        '.(_)'      : Append _ to each line"
 		echo ""
-		echo '   -[cC],           : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
-		echo '   --color=                      but any `\e[...` expression should work)'
+		echo '   -[fFcC],         : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
+		echo '   --[color,font]=                       but any `\e[...` expression should work)'
 		echo -e "                   \e[0;37m# examples:\e[0m"
 		echo -e "                   \e[0;37m#\e[0m   \`... | op -c '1;33' \`"
 		echo -e "                   \e[0;37m#\e[0m   \`... | op --color=33 \`"
+		echo -e "                    \e[0;37m(*) supply font effects last as any remaining EXPRESSIONS are likely to remove them.\e[0m"
 		echo ""
 		echo "  ':*:*', ':*::*'   : Extends the \`:N:N\` substring expansions to allow any string/[pattern]. Carve away."
 		echo ""
@@ -118,7 +119,7 @@ OtherPipe() {
 			\-[bB]*|\-\-[bp][er][fe][op][re][en]*) [[ -z "${!a//*\=*}" ]] || ((++a)) ; String="${!a#*\=}$String" ;;
 			\(*\)[\.\_]) String="${!a:1: -2}$String" ;;
 			\-[aA]|\-\-a[pf][pt][e][nr]*) [[ -z "${!a/*\=*/}" ]] || ((++a)) ; String="$String${!a#*\=}" ;;
-			\-[cC]|'--color'*) [[ -z "${!a//*\=*/}" ]] || ((++a)) ; String=$(echo -e "\e[${!a#*\=}m$String\e[0m") ;;
+			\-[cCfF]|'--color'*|'--font'*) [[ -z "${!a//*\=*/}" ]] || ((++a)) ; String=$(echo -e "\e[${!a#*\=}m$String\e[0m") ;;
 			\?\?\=*[!\}]) exactly "0" "${!a:3}" || { unset String ; break ; } ;;
 			\?\!\=*[!\}]) exactly "1" "${!a:3}" || { unset String ; break ; } ;;
 			\?\?\~*[!\}]) fuzzily "0" "${!a:3}" || { unset String ; break ; } ;;
