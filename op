@@ -1,48 +1,48 @@
 #!/usr/bin/env bash
 
-_dipset() {
-	_1() {
-		echo -e "\e[1;32mNAME\e[0;32m:\e[0m"
-		echo '   op - otherpipe'
-		echo -e "\e[1;32mUSAGE\e[0;32m:\e[0m"
-		echo "   Can accept input through a pipe [AND/OR] from a file:"
-		echo "         whatevs | ${0##*\/} 'FILTER-EXPRESSION(s)' '...' [FILENAME]"
-		echo -e "   \e[1;4;33mOR\e[0m passed verbatim as \`\$1\`:"
-		echo "         ${0##*\/} 'whatevs' 'EXPRESSION'..."
-		echo ""
-	}
-	_0() {
-		_1
-		echo '   * EXPRessions are applied'
-		echo '            - in the order they were passed,'
-		echo '            - on each line (unless otherwise specified)'
+[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo -e "\e[1;32mNAME\e[0;32m:\e[0m"
+	echo '   op - otherpipe'
+	echo -e "\e[1;32mUSAGE\e[0;32m:\e[0m"
+	echo -e "   Apply EXPRESSION(s) to each line of input passed through a pipe [\e[1;4;33mAND/OR\e[0m] read from a file:"
+	echo -e "         \`\e[1;37m[ input... | ] ${0##*\/}  'EXPRESSION(s)'...  [FILE]\e[0m\`"
+	echo -e "                                                 \e[0;37m# if supplied, FILE must be the final argument.\e[0m"
+	echo -e "   \e[1;4;33mOR\e[0m passed verbatim as \`\$1\`:"
+	echo -e "         \`\e[1;37m${0##*\/} 'INPUT STRING' 'EXPRESSION(s)'... \e[0m\`"
+	echo ""
+	[[ "$2" != *(\-)@(all|expr?(ession)|full|syntax|v?(erbose)) ]] && echo -e " * \e[3mFor info on EXPRESSION syntax, run:\e[0m \`\e[1;37m${0##*\/} -h all\e[0m\`\n" || {
+		echo -e " * \e[1;33mEXPRESSIONs\e[0m are applied"
+		echo '         - to each line of input (unless otherwise specified)'
+		echo '         - in the order they were supplied,'
 		echo ""
 		echo -e "\e[1;32mBASH BUILT-IN EXPANSIONS\e[0;32m:\e[0;37m (do what you'd expect)\e[0m"
 		echo "  ':N'        : from Nth to last char(s)"
 		echo "  '::N'       : from first to Nth char(s)"
 		echo "  ':N:N'      : from Nth to Nth char(s)"
-		echo "  '%...*'     : preceding first of ..."
-		echo "  '%%...*'    : preceding all of"
+		echo "  '%...*'     : preceding last of ..."
+		echo "  '%%...*'    : preceding any of ..."
 		echo "  '#*...'     : after first of ..."
 		echo "  '##*...'    : after any of ..."
 		echo "  '/w/[e]'    : replace first of 'w' with ['e']"
-		echo "  '//w/[e]'   : replace each of 'w' with ['e']"
-		echo "  '^'         : '/[:lower:]/[:upper:]' (char[0] only)"
-		echo "  '^^'        : '//[:lower:]/[:upper:]'"
-		echo "  ','         : '/[:upper:]/[:lower:]' (char[0] only)"
-		echo "  ',,'        : '//[:upper:]/[:lower:]'"
-		echo "  '~[C]'      : swap case of first [optionally specified] character(s)."
-		echo "  '~~[c]'     : swap case of all [optionally specified] character(s)."
+		echo "  '//w/[e]'   : replace any of 'w' with ['e']"
+		echo "  '^'         : make first character Uppercase."
+		echo "  '^^'        : make all characters UPPERCASE."
+		echo "  ','         : make first character lOWERCASE."
+		echo "  ',,'        : make all characters lowercase."
+		echo "  '~[abc]'    : swap case of first [(detected) optionally specified] character."
+		echo "  '~~[abc]'   : swap case of all [(detected) optionally specified] characters."
+		echo -e "                \e[0;37m# if [character(s)] are specified but none are detected, does nothing\e[0m"
+		echo -e "                \e[0;37m#  otherwise, behaves normally.\e[0m"
 		echo ""
 		echo -e "\e[1;32mFILTERING & CONDITIONAL EXPRESSIONS\e[0;32m:\e[0m"
 		echo "  '??[=|~]_'        : Supress lines not [matching|containing] _"
 		echo "  '?![=|~]_'        : Supress lines [matching|containing] _"
 		echo "  '??[=|~]_.{EXPR}' : Apply EXPR to lines [matching|containing] _"
 		echo "  '?![=|~]_.{EXPR}' : Apply EXPR to lines not [matching|containing] _"
-		echo '      examples:'
-		echo "         ... | op '??=*whatev*' supresses lines not matching *'whatev'*"
-		echo "         ... | op '?!~whatev' supresses lines containing 'whatev'"
-		echo "         ... | op '??~whatev.{(_).}' prepends all lines containing 'whatev' with '_'"
+		echo -e "      \e[0;37m# examples:\e[0m"
+		echo -e "      \e[0;37m#\e[0m  \`... | op '??=*whatev*' \`\e[0;37m (supress lines not matching *'whatev'*)\e[0m"
+		echo -e "      \e[0;37m#\e[0m  \`... | op '?!~whatev' \`\e[0;37m (supress lines containing 'whatev')\e[0m"
+		echo -e "      \e[0;37m#\e[0m  \`... | op '??~whatev.{(_).}' \`\e[0;37m (prepend all lines containing 'whatev' with '_')\e[0m"
 		echo ""
 		echo -e "\e[1;32mMISCELLANEOUS EXPRESSIONS\e[0;32m:\e[0m"
 		echo '  -[BP],'
@@ -55,23 +55,26 @@ _dipset() {
 		echo '   --append _'
 		echo "        '.(_)'      : Append _ to each line"
 		echo ""
-		echo " '{N}.*'    : Repeatedly apply *(any other exression, expansion, or filter) N times."
-		echo ""
-		echo '   -[cC],   : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
+		echo '   -[cC],           : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
 		echo '   --color=                      but any `\e[...` expression should work)'
-		echo '                  examples:'
-		echo "                    ... | op -c '1;33'"
-		echo "                    ... | op --color=33"
+		echo -e "                   \e[0;37m# examples:\e[0m"
+		echo -e "                   \e[0;37m#\e[0m   \`... | op -c '1;33' \`"
+		echo -e "                   \e[0;37m#\e[0m   \`... | op --color=33 \`"
 		echo ""
-		echo "  \"//w/*\$'\\n'*\" : Replace each of 'w' with *newline*"
+		echo "  ':*:*', ':*::*'   : Extends the \`:N:N\` substring expansions to allow any string/[pattern]. Carve away."
+		echo ""
+		echo "  \"//_/*\$'\\n'*\" : Replace each of '_' with *newline*"
 		echo ""
 		echo "  \"//\$'\\n'/*\"   : Remove or replace newlines with [*| ]"
+		echo ""
+		echo " '{N}.EXPR'         : Repeatedly apply EXPR(any other EXPRESSION) N times."
+		echo -e "                     \e[0;37m# example:\e[0m"
+		echo -e "                     \e[0;37m# trim up to third occurance of ['/'or'\']\e[0m"
+		echo -e "                     \e[0;37m#\e[0m   \`... | ${0##*\/} '{3}.#*[\/\\]' \`"
+		echo ""
 	}
-	_${1:-0}
-	exit ${1:-0}
+	exit 0
 }
-
-[[ "${1}" != +(\-)@([hH])?([eE][lL][pP]) ]] || _dipset
 
 declare -g String
 declare -ga Strings
@@ -89,6 +92,19 @@ fuzzily() {
 }
 
 dp() { while read item ; do Array[${#Array[@]}]="$item" ; done < <(for ((x=1;x<=$#;x++)); do echo "${!x}" ; done ; [ -t 0 ] || cat - ) ; local IFS=\| ; echo "${Array[*]}" ; }
+
+toLast() {
+	_b() { : "${2%$1*}" ; [[ "$1" != \[*\] ]] && String="${2::${#_}+${#1}}" || String="${2::${#_}+1}" ; }
+	_a() { : "${String%%$1*}" ; _b "$2" "${String:${#_}}" ; }
+	_a "$1" "$2"
+}
+toFirst() {
+	_b() { : "${2%%$1*}" ; [[ "$1" != \[*\] ]] && String="${2::${#_}+${#1}}" || String="${2::${#_}+1}" ; }
+	_a() { : "${String%%$1*}" ; _b "$2" "${String:${#_}}" ; }
+	_a "$1" "$2"
+}
+
+dundre() { [[ "$String" != *${1}* ]] || String="${String%%${String#*${1}}*}" ; }
 
 OtherPipe() {
 	local -a Argz string
@@ -111,6 +127,25 @@ OtherPipe() {
 			\?\!\=*\.\{*\}) onDo="${!a#*\.\{}" && exactly "0" "${!a:3: -${#onDo}-2}" || { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
 			\?\?\~*\.\{*\}) onDo="${!a#*\.\{}" && fuzzily "1" "${!a:3: -${#onDo}-2}" || { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
 			\?\!\~*\.\{*\}) onDo="${!a#*\.\{}" && fuzzily "0" "${!a:3: -${#onDo}-2}" || { Argz=( "${String}" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-${String}}" | ${FUNCNAME} "${Argz[z]}") ; done && String="${string}" ; unset string Argz[*] ; } ;;
+			\:[!0-9]*|\:\:[!0-9]*)
+				if [[ "${!a}" == \:\:+([!\:])\:\:* ]]; then
+					while read ence ; do [[ -z "$ence" ]] || dundre "$ence" ; done < <(echo "${!a//'::'/$'\n'}" )
+				else
+					if [[ "${!a}" == \:+([!\:])\:+([!\:]) ]]; then
+						x="${!a:1}" && y="${x#*\:}" && toFirst "${x%%\:*}" "$y"
+						unset x y
+					elif [[ "${!a}" == \:+([!\:])\:\:* ]]; then
+						x="${!a:1}" && y="${x#*\:\:}" && toLast "${x%%\:*}" "$y"
+						unset x y
+					else
+						if [[ ${!a:1:1} == \: ]]; then
+							dundre "${!a:2}"
+						else
+							[[ "$String" != *${!a:1}* ]] || String="${String#*${String%%${!a:1}*}}"
+						fi
+					fi
+				fi
+				;;
 			*)
 				if [[ "${!a}" == \{+([[:digit:]])\}\.* ]]; then
 					rp="${!a%%\}*}" && ((rt=(${rp:1} + 0)))
@@ -135,4 +170,4 @@ OtherPipe() {
 	done < <(cat - )
 }
 
-[[ -f "${!#-1}" && $# -gt 1 ]] && { [ -t 0 ] && { cat "${!#-1}" | OtherPipe "${@::$#}" ; } || { cat "${!#-1}" - | OtherPipe "${@::$#}" ; } ; } || { [ -t 0 ] && { echo "${1}" | OtherPipe "${@:2}" ; } || { cat - | OtherPipe "${@}" ; } ; } 2>/dev/null
+[[ -f "${!#-1}" && $# -gt 1 ]] && { [ -t 0 ] && { cat "${!#-1}" | OtherPipe "${@:1:$#-1}" ; } || { cat "${!#-1}" - | OtherPipe "${@:1:$#-1}" ; } ; } || { [ -t 0 ] && { echo "${1}" | OtherPipe "${@:2}" ; } || { cat - | OtherPipe "${@}" ; } ; } 2>/dev/null
