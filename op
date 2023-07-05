@@ -58,20 +58,24 @@
 		echo '   -[fFcC],         : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
 		echo '   --[color,font]=                       but any `\e[...` expression should work)'
 		echo -e "                   \e[0;37m# examples:\e[0m"
-		echo -e "                   \e[0;37m#\e[0m   \`... | op -c '1;33' \`"
+		echo -e "                   \e[0;37m#\e[0m   \`... | op -c '1;33;3' \`"
 		echo -e "                   \e[0;37m#\e[0m   \`... | op --color=33 \`"
 		echo -e "                    \e[0;37m(*) supply font effects last as any remaining EXPRESSIONS are likely to remove them.\e[0m"
 		echo ""
-		echo "  ':*:*', ':*::*'   : Extends the \`:N:N\` substring expansions to allow any string/[pattern]. Carve away."
+		echo "  ':*',          : Extends the \`:N:N\` substring expansions to allow any string/[pattern]. Carve away."
+		echo -e "   '::*',         \e[0;37m# examples:\e[0m"
+		echo -e "    ':*:*',       \e[0;37m#\e[0m   \`... | op ':[wW]::hat[eE]ver' \`"
+		echo -e "     ':*::*'      \e[0;37m#\e[0m   \`... | op ':ex:[ABC123]' \`"
+		echo -e "                  \e[0;37m#\e[0m   \`... | op '::[aAbBcC]' \`"
 		echo ""
 		echo "  \"//_/*\$'\\n'*\" : Replace each of '_' with *newline*"
 		echo ""
 		echo "  \"//\$'\\n'/*\"   : Remove or replace newlines with [*| ]"
 		echo ""
-		echo " '{N}.EXPR'         : Repeatedly apply EXPR(any other EXPRESSION) N times."
-		echo -e "                     \e[0;37m# example:\e[0m"
-		echo -e "                     \e[0;37m# trim up to third occurance of ['/'or'\']\e[0m"
-		echo -e "                     \e[0;37m#\e[0m   \`... | ${0##*\/} '{3}.#*[\/\\]' \`"
+		echo " '{N}.EXPR'     : Repeatedly apply EXPR(any other EXPRESSION) N times."
+		echo -e "                 \e[0;37m# example:\e[0m"
+		echo -e "                 \e[0;37m# trim up to third occurance of ['/'or'\']\e[0m"
+		echo -e "                 \e[0;37m#\e[0m   \`... | ${0##*\/} '{3}.#*[\/\\]' \`"
 		echo ""
 	}
 	exit 0
@@ -128,7 +132,7 @@ OtherPipe() {
 			\?\!\=*\.\{*\}) onDo="${!a#*\.\{}" && exactly "0" "${!a:3: -${#onDo}-2}" || { Argz=( "$String" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-$String}" | $FUNCNAME "${Argz[z]}") ; done && String="$string" ; unset string Argz[*] ; } ;;
 			\?\?\~*\.\{*\}) onDo="${!a#*\.\{}" && fuzzily "1" "${!a:3: -${#onDo}-2}" || { Argz=( "$String" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-$String}" | $FUNCNAME "${Argz[z]}") ; done && String="$string" ; unset string Argz[*] ; } ;;
 			\?\!\~*\.\{*\}) onDo="${!a#*\.\{}" && fuzzily "0" "${!a:3: -${#onDo}-2}" || { Argz=( "$String" ${onDo:: -1}  ) && for ((z=0;z<${#Argz[@]};z++)); do string=$(echo "${string:-$String}" | $FUNCNAME "${Argz[z]}") ; done && String="$string" ; unset string Argz[*] ; } ;;
-			\:[!0-9]*|\:\:[!0-9]*)
+			\:[!0-9\:]*|\:\:[!0-9]*)
 				if [[ "${!a}" == \:\:+([!\:])\:\:* ]]; then
 					while read ence ; do [[ -z "$ence" ]] || dundre "$ence" ; done < <(echo "${!a//'::'/$'\n'}" )
 				else
