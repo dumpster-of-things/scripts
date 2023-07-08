@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+Usage() {
+	echo 'NAME:' ; echo "   ${0##*\/} - pretty filesystem info"
+	echo 'USAGE:' ; echo "   \` ${0##*\/} [[-[hv]] [%path(s)]] \`"
+	echo 'DESCRIPTION:'
+	echo '   Generates an attractive aggregation of disk/mount-point information including:'
+	echo '    %Device, %Mount-Point, %Size-Used, %Size-Available, and %Percentage-Used (courtesy of `df`)' 
+	echo '   Ran with no input, it returns information for all non-trivial filesystems.'
+	echo '   It tries to ignore snap container mounts and other noise,' ; echo '    although you may be able to specify their path directly.'
+	echo '   If %[file]path(s) are supplied, the results will be limited to their corresponding filesystem (as with `df`).'
+	echo 'OPTIONAL INPUT:'
+	echo '   -h,          : Show this message.' ; echo '    --help' ; echo ""
+	echo '   -[sv],       : Include the size of %[file]path(s) (courtesy of `du`)'
+	echo '    --size,              (ignored if none supplied).' ; echo '    --verbose'
+	echo ""
+	exit ${1:-0}
+}
+for ((a=1;a<=$#;a++)); do
+	case "${!a}" in
+	\-[hH]|'--help') Usage ;;
+	\-[sv]|'--size'|'--verbose') Verb=true ;;
+	*) [[ -e "${!a}" ]] && Item[${#Item[@]}]="$(df --output=source,file "${!a}" 2>/dev/null | awk '/^Filesystem/{ next; }; { print $1,$2 }')" || Usage 1
+	esac
+done
+
+declare -gi W=$(( $(getSize x) - 8 ))
+Spit() { ((P=${#4}+${#5}+1)) ; S=$(prog $W $1 $2) ; N=${S:: -1} ; ((N<P?(X=P+N+${#4}+2):(X=0))) ; printf "\e[0;30m\u256D\e[9m%${W}s\e[29m\u256E\n\u251D\e[2;37m${4}\e[0;33m:\e[1;30m${5}\e[1;9;35m%$((X+N-P))s\e[2;34m%$((W-N-X))s\e[m\e[0;30m\u2525\e[1;30m${3}\u0025\n\e[0;30m\u2570\e[0;33m${7}\e[0;30m\e[9m%$((W-${#6}-${#7}))s\e[29;0;32m${6}\e[0;30m\u256F\e[0m\n%${W}s\r" ; }
+Aggregate() {
+	while read Device Capacity SizeUsed SizeAvail PercUsed Mounted ; do
+		(( ${#PercUsed} < 3 )) || Spit "${Capacity//[!0-9\.\-]/}" "${SizeUsed//[!0-9\.\-]/}" "${PercUsed/\%/}" "${Device}" "${Mounted}" "$(echo "scale=2;${SizeAvail//[!0-9\.\-]/}/(10^6)" | bc -l)G" "$(echo "scale=2;${SizeUsed//[!0-9\.\-]/}/(10^6)" | bc -l)G"
+	done < <(df -BK "${@}" 2>/dev/null | awk '/^Filesystem/{ next; }; {print $0}' )
+}
+
+if (( ${#Item[@]} == 0 )); then Aggregate ; else
+	while read line ; do
+		[[ "${Mnt:-}" == "${line%%\ *}" ]] || Aggregate "${line#*\ }"
+		[[ ${Verb:-false} != true ]] || du -hs "${line#*\ }"
+		Mnt="${line%%\ *}"
+	done < <(for ((p=0;p<${#Item[@]};p++)); do echo "${Item[p]}" ; done | sort )
+fi
+echo ""
