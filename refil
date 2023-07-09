@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+Usage() {
+	echo 'NAME:' ; echo "   ${0##*\/} - prescription medication refill reminders"
+	echo 'USAGE:' ; echo "   \` ${0##*\/}  -q _  -d _  -p _  [-oh _ ] \`"
+	echo 'MANDATORY:'
+	echo '   -d,    --date :  Date filled (yyyymmdd).'
+	echo '   -q,   --total :  Total filled (number of units per bottle).'
+	echo '   -p,    --dose :  Prescribed daily dosage (number of units, not weight(mg)).'
+	echo 'OPTIONAL:'
+	echo '  -oh, --on-hand :  Units currently remaining.' ; echo ""
+	echo '* The term "unit" refers to whatever form a single dose of your medication comes in:'
+	echo '   pills, capsules, shots, gummies, drops, patches, etc...' ; echo ""
+	echo "" ; exit ${1:-0}
+}
+
+for ((a=1;a<=$#;a++)); do
+	case "${!a}" in
+	\-[hH]|'--help') Usage ;;
+	\-[dD]*|'--date'*) [[ "${!a}" == *[0-9\:\=]* ]] || ((++a)) ; FilledOn="${!a//[!0-9]/}" ; [[ $FilledOn -le $(date '+%Y%m%d') ]] || { echo "Can not predict future." ; exit 1 ; } ;;
+	\-[pPuU]*|'--dose'*) [[ "${!a}" == *[0-9\:\=]* ]] || ((++a)) ; Daily="${!a//[!0-9]/}" ;;
+	\-[oO][hH]*|'--on-hand'*) [[ "${!a}" == *[0-9\:\=]* ]] || ((++a)) ; Have="${!a//[!0-9]/}" ;;
+	-[qQcCtT]*|\-\-[cCtTqQ][oOuU][uUtTaA][nNaA][tTlL]*) [[ "${!a}" == *[0-9\:\=]* ]] || ((++a)) ; Total="${!a//[!0-9]/}" ;;
+	*) Usage 1
+	esac
+done
+[[ -n $FilledOn && -n $Daily && -n $Total ]] || Usage 1
+
+Remain=$((Total - $(( $(iterdate +v ${FilledOn:-$(date '+%Y%m%d')} | wcl) * Daily ))))
+echo "" ; echo "If you started taking $Daily units per day on $FilledOn ; then"
+echo "   after today, you should have $((Remain>0?Remain:0)) units remaining." ; echo ""
+Wait=$(( ((Total/Daily)) - $(iterdate +v $FilledOn $(date '+%Y%m%d') | wcl) ))
+if [[ -n $Have ]]; then
+	if ((Wait>0)); then
+		[[ ${Alot:=$(echo "scale=3; (($Have / $Wait) - $Daily) * $Wait" | bc -l)} != \-* ]] || stance="ahead of"
+	fi
+	echo "You said you still have $Have on hand; which puts you ${Alot:-$Have} ${stance:-behind} schedule."
+	((Wait<=0)) || echo "This would alot you $(echo "scale=3; $Have / $Wait" | bc -l) per day over the next $Wait days."
+fi
+echo $'\n'"There are $Wait days remaining on this prescription."$'\n'
+echo "Be sure to get your refill request in by: $(case ${RD:="$(today + $Wait)"} in Sat*) today + $((Wait-1)) ;; Sun*) today + $((Wait-2)) ;; *) echo "$RD" ; esac)"
+echo ""
