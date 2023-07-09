@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+spitBar() { printf "\e[0;30m\u256D\e[9m%${2}s\e[29m\u256E\n\u251D\e[1;9;32m%${1}s\e[2;34m%$((${2}-${1}))s\e[m\e[0;30m\u2525\n\u2570\e[9m%${2}s\e[29m\u256F\e[0m\n%${2}s${3}\n" ; }
+
+[[ "${2:-$1}" != *(\-)[eE][xX][aA][mM][pP][lL][eE] ]] || { tput civis; i=1; for((;i<42;)){ tput clear ; spitBar $((++i)) 42 "$(prog 100 42 $i)%" ; sleep 0.1 ; }; tput reset ; exit 0 ; }
+
+[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo 'USAGE:   progbar `{current_job_count} {total_jobs}`'
+	echo 'Generates a singe "frame" of a progress meter.'
+	echo 'Use it in a looping process to draw a status bar in real time.'
+	echo 'For example: `tput civis; i=1; for((;i<42;)){ tput clear ; progbar $((++i)) 42 ; sleep 0.1 ; }; tput reset`'
+	echo $'\n''* Run `progbar --example` for a visual demonstration of the above example.'
+	echo $'\n''* You may want to extract the useful bits from this script and add them to your project directly as to eliminate unecessary overhead.'
+	exit 0
+}
+
+(($#==2)) || { echo 'Two numerical arguments required.' ; exit 1 ; }
+#(($1>$2)) || spitBar $1 $2 "$(echo "100*($1/$2)" | bc -l | cut -d\. -f1)%"
+(($1>$2)) || spitBar $1 $2 "$(prog 100 $2 $1)%"
