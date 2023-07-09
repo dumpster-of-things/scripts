@@ -150,16 +150,18 @@ chkds() {
 	fi
 }
 
-(( v < 1 )) || chkds "${fromDate::4}-${fromDate:4:2}-${fromDate:6}"
-for (( y = Year[0] ; y <= Year[-1] ; y++ )); do
-	_leapChk "${y}" || Feb=29
-	for (( m = 1 ; m <= ${#Months[@]} ; m++ )) ; do
-		month="$(printf '%02d' "${m}")"
-		for (( d = 1 ; d <= ${!Months[m-1]} ; d++ )); do
-			day="$(printf '%02d' "${d}")"
-			YMD="${y}${month}${day}" 
-			(( YMD <= ${fromDate} || YMD >= ${toDate} )) || chkds "${y}-${month}-${day}"
+{
+	(( v < 1 )) || chkds "${fromDate::4}-${fromDate:4:2}-${fromDate:6}"
+	for (( y = Year[0] ; y <= Year[-1] ; y++ )); do
+		_leapChk "${y}" || Feb=29
+		for (( m = 1 ; m <= ${#Months[@]} ; m++ )) ; do
+			month="$(printf '%02d' "${m}")"
+			for (( d = 1 ; d <= ${!Months[m-1]} ; d++ )); do
+				day="$(printf '%02d' "${d}")"
+				YMD="${y}${month}${day}" 
+				(( YMD <= ${fromDate} || YMD >= ${toDate} )) || chkds "${y}-${month}-${day}"
+			done
 		done
 	done
-done
-(( v < 0 )) || chkds "${toDate::4}-${toDate:4:2}-${toDate:6}"
+	(( v < 0 )) || chkds "${toDate::4}-${toDate:4:2}-${toDate:6}"
+} | awk '!a[$0]++'
