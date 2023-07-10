@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 [[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || {
-	echo 'USAGE:   progbar `{current_job_count} {total_jobs}`'
+	echo 'USAGE:   progbar `{current_count} {total}`'
 	echo 'Generates a singe "frame" of a progress meter.'
 	echo 'Use it in a looping process to draw a status bar in real time.'
 	echo 'For example: `tput civis; i=1; for((;i<42;)){ tput clear ; progbar $((++i)) 42 ; sleep 0.1 ; }; tput reset`'
