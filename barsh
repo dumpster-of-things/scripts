@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+ ###                                                                                                         ###
+#                                                                                                               #
+#	/  \           _/  |_            /  |  /  |           /  |                                     /  |         #
+#	$$  \         / $$   \   ______  Ii/  _Tt |_          bb |____    ______    ______     _______ Hh |         #
+#	 $$  \       /$$$$$$  | /      \ /  |/ Tt   |  ______ bb      \  /      \  /      \   /       |Hh      \    #
+#	  $$  |      $$ \__$$/ /PPPPPp  |Ii |TTTTTt/  /      |bbbbbbb  | aaaaaa  |/RRRRRr  | /SSSSSSs/ HHHHHHh  |   #
+#	  /$$/       $$      \ Pp |  Pp |Ii |  Tt | __######/ bb |  bb | /    aa |Rr |  Rr/  Ss      \ Hh |  Hh |   #
+#	 /$$/         $$$$$$  |Pp |__Pp |Ii |  Tt |/  |       bb |__bb |/aaaaaaa |Rr |   __   SSSSSs  |Hh |  Hh |   #
+#	/$$/         /  \__$$ |Pp    Pp/ Ii |  Tt  Tt/        bb    bb/ aa    aa |Rr |  /  | /     Ss/ Hh |  Hh |   #
+#	$$/          $$    $$/ PPPPPPp/  Ii/    TTTt/         bbbbbbb/   aaaaaaa/ Rr/   %%/  SSSSSSs/  Hh/   Hh/    #
+#	              $$$$$$/  Pp |                                                                                 #
+#	                $$/    Pp |                                                                                 #
+#                          Pp/                                                                                  #
+ ###                                                                                                         ###
+
+shopt -s checkwinsize && declare -g COLUMNS LINES
+GetSize() {
+	local fn S
+	_1() { printf '%s %s\n' "$COLUMNS" "$LINES" ; }
+	_2() { read LINES COLUMNS < <(stty size ) && printf '%s %s\n' "$COLUMNS" "$LINES" ; }
+	_3() { printf '%b' "${TMUX:+\\ePtmux;\\e}\\e[14t${TMUX:+\\e\\\\}" ; IFS=';t' read -d t -t 0.05 -sra term_size ; printf '%i %i\n' "$(( ${term_size[2]} / 16 ))" "$(( ${term_size[1]} / 8 ))" ; }
+	for fn in {1..3}; do
+		[[ ${S:="$(_$fn)"} == *[1-9]\ [1-9]* ]] && break || { unset S ; continue ; }
+	done
+	echo "${S%\ *} ${S#*\ }" | cut -d\  -f${1:-1,2}
+}
+
+Bars() { printf "\e[0;30m\u256D\e[9m%${2}s\e[29m\u256E\n\u251D\e[1;9;32m%${1}s\e[2;34m%$(($2-$1))s\e[m\e[0;30m\u2525\n\u2570\e[9m%${2}s\e[29m\u256F\e[0m\n%${2}s${3}\n" ; }
+Prog() { { echo "scale=2; ${3:-100} * ($1 / $2)" | bc | cut -d\. -f1 ; } || echo '0' ; }
+Spit() { w=$(($(GetSize 1)-4)) ; Bars $(Prog $1 $2 $w) $w "$(Prog $1 $2)%%" ; }
+
+if [[ "${1:-}${2:-}" != @([0-9])+([0-9]) ]]; then
+	echo -e "USAGE:\n   \`${0##*\/} {numerator} {denominator}\`"
+	[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || { w=$(($(GetSize 1)-4))
+		tput civis; for((i=1;i<42;i++)){ tput clear
+			echo -e "USAGE:\n   \`${0##*\/} {numerator} {denominator}\`\n"
+			echo -e "DESCRIPTION:\n   Generates a singe 'frame' of a progress meter.\n"
+			echo -e "PROTIP:\n\tloading...\n"
+			tput cup 9 0; Bars $(Prog $i 42 $w) $w "$(Prog $i 42)%%"; tput sgr0
+			sleep 0.1
+		}
+		tput clear ; tput reset
+		echo -e "USAGE:\n   \`${0##*\/} {numerator} {denominator}\`\n"
+		echo -e "DESCRIPTION:\n   Generates a singe 'frame' of a progress meter.\n"
+		echo 'PROTIP:'
+		echo '   * You may want to extract the useful bits from this script and add them'
+		echo '      to your project directly to eliminate the unecessary overhead of this script.'
+	} ; echo ""
+	exit $(($#==0?1:0))
+else
+	Spit ${@}
+fi
