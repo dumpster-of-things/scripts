@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
  ###                                                                                                         ###
 #                                                                                                               #
-#	/  \           _/  |_            /  |  /  |           /  |                                     /  |         #
-#	$$  \         / $$   \   ______  Ii/  _Tt |_          bb |____    ______    ______     _______ Hh |         #
-#	 $$  \       /$$$$$$  | /      \ /  |/ Tt   |  ______ bb      \  /      \  /      \   /       |Hh      \    #
-#	  $$  |      $$ \__$$/ /PPPPPp  |Ii |TTTTTt/  /      |bbbbbbb  | aaaaaa  |/RRRRRr  | /SSSSSSs/ HHHHHHh  |   #
-#	  /$$/       $$      \ Pp |  Pp |Ii |  Tt | __######/ bb |  bb | /    aa |Rr |  Rr/  Ss      \ Hh |  Hh |   #
-#	 /$$/         $$$$$$  |Pp |__Pp |Ii |  Tt |/  |       bb |__bb |/aaaaaaa |Rr |   __   SSSSSs  |Hh |  Hh |   #
-#	/$$/         /  \__$$ |Pp    Pp/ Ii |  Tt  Tt/        bb    bb/ aa    aa |Rr |  /  | /     Ss/ Hh |  Hh |   #
-#	$$/          $$    $$/ PPPPPPp/  Ii/    TTTt/         bbbbbbb/   aaaaaaa/ Rr/   %%/  SSSSSSs/  Hh/   Hh/    #
-#	              $$$$$$/  Pp |                                                                                 #
-#	                $$/    Pp |                                                                                 #
+#   /  \           _/  |_            /  |  /  |           /  |                                     /  |         #
+#   $$  \         / $$   \   ______  Ii/  _Tt |_          bb |____    ______    ______     _______ Hh |         #
+#    $$  \       /$$$$$$  | /      \ /  |/ Tt   |  ______ bb      \  /      \  /      \   /       |Hh      \    #
+#     $$  |      $$ \__$$/ /PPPPPp  |Ii |TTTTTt/  /      |bbbbbbb  | aaaaaa  |/RRRRRr  | /SSSSSSs/ HHHHHHh  |   #
+#     /$$/       $$      \ Pp |  Pp |Ii |  Tt | __######/ bb |  bb | /    aa |Rr |  Rr/  Ss      \ Hh |  Hh |   #
+#    /$$/         $$$$$$  |Pp |__Pp |Ii |  Tt |/  |       bb |__bb |/aaaaaaa |Rr |   __   SSSSSs  |Hh |  Hh |   #
+#   /$$/         /  \__$$ |Pp    Pp/ Ii |  Tt  Tt/        bb    bb/ aa    aa |Rr |  /  | /     Ss/ Hh |  Hh |   #
+#   $$/          $$    $$/ PPPPPPp/  Ii/    TTTt/         bbbbbbb/   aaaaaaa/ Rr/   %%/  SSSSSSs/  Hh/   Hh/    #
+#                 $$$$$$/  Pp |                                                                                 #
+#                   $$/    Pp |                                                                                 #
 #                          Pp/                                                                                  #
  ###                                                                                                         ###
-
 shopt -s checkwinsize && declare -g COLUMNS LINES
 GetSize() {
 	local fn S
@@ -31,23 +30,25 @@ Prog() { { echo "scale=2; ${3:-100} * ($1 / $2)" | bc | cut -d\. -f1 ; } || echo
 Spit() { w=$(($(GetSize 1)-4)) ; Bars $(Prog $1 $2 $w) $w "$(Prog $1 $2)%%" ; }
 
 if [[ "${1:-}${2:-}" != @([0-9])+([0-9]) ]]; then
-	echo -e "USAGE:\n   \`${0##*\/} {numerator} {denominator}\`"
+	Usage() {
+		_0() { echo -e "USAGE:\n   \`${0##*\/} (numerator) (denominator)\`\n" ; }
+		_1() { _0 ; echo -e " * Run \`${0##*\/} -h\` for more info and an example.\n" ; }
+		_2() { _0 ; echo -e "DESCRIPTION:\n   Generates a singe 'frame' of a progress meter, or 'bar'.\n   The bar is automatically sized to fit the terminal's width.\n" ; }
+		_3() { _2 ; echo -e "PROTIP:\n\tloading...\n" ; }
+		_4() { _2 ; echo -e "PROTIP:\n   * You may want to extract the useful bits from this script and add them\n      to your project directly to eliminate the unecessary overhead of this script.\n" ; }
+		_${1:-0}
+	}
+	Usage 1
 	[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || { w=$(($(GetSize 1)-4))
 		tput civis; for((i=1;i<42;i++)){ tput clear
-			echo -e "USAGE:\n   \`${0##*\/} {numerator} {denominator}\`\n"
-			echo -e "DESCRIPTION:\n   Generates a singe 'frame' of a progress meter.\n"
-			echo -e "PROTIP:\n\tloading...\n"
+			Usage 3
 			tput cup 9 0; Bars $(Prog $i 42 $w) $w "$(Prog $i 42)%%"; tput sgr0
 			sleep 0.1
 		}
 		tput clear ; tput reset
-		echo -e "USAGE:\n   \`${0##*\/} {numerator} {denominator}\`\n"
-		echo -e "DESCRIPTION:\n   Generates a singe 'frame' of a progress meter.\n"
-		echo 'PROTIP:'
-		echo '   * You may want to extract the useful bits from this script and add them'
-		echo '      to your project directly to eliminate the unecessary overhead of this script.'
-	} ; echo ""
-	exit $(($#==0?1:0))
+		((w+4<113)) || head -n15 $0 | tail -n+2
+		Usage 4
+	} ; exit $(($#==0?1:0))
 else
 	Spit ${@}
 fi
