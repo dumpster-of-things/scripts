@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+Usage() {
+	echo -e "NAME:\n   ${0##*\/}"
+	echo -e "USAGE:\n   \`[ %{numbers} ... |] ${0##*\/} %{numbers} ...\`"
+	echo -e "DESCRIPTION:\n   Calculates the sum of all numeric inputs."
+	echo -e "EXAMPLE:\n   > \`echo '2.05' | ${0##*\/} 1.03 1.06 -1\`\n   : 3.14\n"
+	exit ${1:-0}
+}
+[[ "$1" != *(\-)@([hH])?([eE][lL][pP]) ]] || Usage
+
+_sum() {
+	local -a num
+	IFS='+' && while read num[${#num[@]}] ; do :; done < <(2>/dev/null cat - )
+	[[ "${num[*]}" != *[!0-9\.\-\ $IFS]* ]] || Usage 1
+	echo "scale=3;${num[*]}0" | bc -l
+}
+
+{ [ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a//[!0-9\.\-]/}" ; done ; } | sed '/^\s*$/d' | _sum
