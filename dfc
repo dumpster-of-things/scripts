@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 Usage() {
 	echo 'NAME:' ; echo "   ${0##*\/} - pretty filesystem info"
 	echo 'USAGE:' ; echo "   \` ${0##*\/} [[-[hv]] [%path(s)]] \`"
@@ -25,7 +24,8 @@ for ((a=1;a<=$#;a++)); do
 done
 
 declare -gi W=$(( $(getSize x) - 8 ))
-Spit() { ((P=${#4}+${#5}+1)) ; S=$(prog $W $1 $2) ; N=${S:: -1} ; ((N<P?(X=P+N+${#4}+2):(X=0))) ; printf "\e[0;30m\u256D\e[9m%${W}s\e[29m\u256E\n\u251D\e[2;37m${4}\e[0;33m:\e[1;30m${5}\e[1;9;35m%$((X+N-P))s\e[2;34m%$((W-N-X))s\e[m\e[0;30m\u2525\e[1;30m${3}\u0025\n\e[0;30m\u2570\e[0;33m${7}\e[0;30m\e[9m%$((W-${#6}-${#7}))s\e[29;0;32m${6}\e[0;30m\u256F\e[0m\n%${W}s\r" ; }
+Prog() { { echo "scale=2; ${3:-100} * ($1 / $2)" | bc | cut -d\. -f1 ; } || echo '0' ; }
+Spit() { ((P=${#4}+${#5}+1)) ; S=$(Prog $W $1 $2) ; N=${S:: -1} ; ((N<P?(X=P+N+${#4}+2):(X=0))) ; printf "\e[0;30m\u256D\e[9m%${W}s\e[29m\u256E\n\u251D\e[2;37m${4}\e[0;33m:\e[1;30m${5}\e[1;9;35m%$((X+N-P))s\e[2;34m%$((W-N-X))s\e[m\e[0;30m\u2525\e[1;30m${3}\u0025\n\e[0;30m\u2570\e[0;33m${7}\e[0;30m\e[9m%$((W-${#6}-${#7}))s\e[29;0;32m${6}\e[0;30m\u256F\e[0m\n%${W}s\r" ; }
 Aggregate() {
 	while read Device Capacity SizeUsed SizeAvail PercUsed Mounted ; do
 		(( ${#PercUsed} < 3 )) || Spit "${Capacity//[!0-9\.\-]/}" "${SizeUsed//[!0-9\.\-]/}" "${PercUsed/\%/}" "${Device}" "${Mounted}" "$(echo "scale=2;${SizeAvail//[!0-9\.\-]/}/(10^6)" | bc -l)G" "$(echo "scale=2;${SizeUsed//[!0-9\.\-]/}/(10^6)" | bc -l)G"
