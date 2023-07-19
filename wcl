@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
+	echo -e "NAME:\n   ${0##*\/} - count all the lines"
+	echo -e "USAGE:\n   \`[ %{lines} ... | ] ${0##*\/} [-options] [files,directories]...\`"
+	echo -e "DESCRIPTION:\n   Basically it's \`wc -l\` with added functionality."
+	echo '   If input is supplied through a pipe, it counts the lines.'
+	echo '   If input is a file, it counts the lines within said file.'
+	echo '   If input is a directory, it counts the files within it.'
+	echo '  * Inputs are counted in the order received.'
+	echo "OPTIONAL PARAMETERS:"
+	echo '   -h,          : Show this message.'
+	echo '    --help'
+	echo '   -p, -n,      : Use comma-notated output (ie: N >= 1,000)'
+	echo '    --pretty'
+	echo '   -l,          : Label the output(s)'
+	echo '    --label'
+	echo '   -t, -s,      : Combine all counts into a single sum total'
+	echo '    --total,       ( unless modified by `-l` or `-v`,'
+	echo '     --sum           in which case the total wll be appended )'
+	echo '   -v,          : Activates input labelling, comma-notation,'
+	echo '    --verbose      and includes a sum total of all counts'
+	echo "" ; exit 0
+}
+
+for ((a=1;a<=${#};a++)); do
+	case "${!a}" in
+	\-[pPnN]|'--pretty') PRETTY=true ;; # commas in numbers > 999
+	\-[lL]|'--label') LABEL=true ;;
+	\-[tTsS]|'--total'|'--sum') TOTAL=true ;;
+	\-[vV]|'--verbose') eval {PRETTY,LABEL,TOTAL}=true ;;
+	*)
+		if [[ -d "${!a}" ]]; then
+			Dirs[${#Dirs[@]}]="${!a}"
+		else
+			[[ ! -f "${!a}" ]] || Items[${#Items[@]}]="${!a}"
+		fi
+	esac
+done
+if [[ ! -t 0 ]]; then
+	while read line; do
+		Results[${#Results[@]}]="${line}"
+		[[ -z ${LABEL} ]] || Labels[${#Labels[@]}]='[Piped Input]'
+	done < <(cat - | wc -l )
+fi
+if [[ -n ${Dirs[@]} ]]; then
+	for ((i=0;i<${#Dirs[@]};i++)); do
+		while read line; do
+        	[[ "${line}" != *total* ]] || continue
+        	Results[${#Results[@]}]=${line%\ *}
+	    	[[ -z ${LABEL} ]] || Labels[${#Labels[@]}]="${Dirs[i]}"
+	    done < <(ls -A1 ${Dirs[i]} | wc -l )
+	done
+fi
+if [[ ${Items[@]} ]]; then
+	while read line; do
+		[[ "${line}" != *total* ]] || continue
+		Results[${#Results[@]}]=${line%\ *}
+		[[ -z ${LABEL} ]] || Labels[${#Labels[@]}]="${line##*\ }"
+	done < <(wc -l ${Items[@]} )
+fi
+if [[ ${TOTAL} ]]; then
+	_Totally() { : "${*//[!0-9\ \.\-\+]/}" ; echo $(( ${_//\ /\+} )) ; }
+	Results[${#Results[@]}]=$(_Totally ${Results[@]}) && Labels[${#Results[@]}-1]='(TOTAL)'
+	if [[ -z ${LABEL} ]]; then
+		[[ -z ${PRETTY} ]] && echo "${Results[-1]}" || printf "%'d\n" ${Results[-1]}
+		exit 0
+	fi
+fi
+for ((r=0;r<${#Results[@]};r++)); do
+	[[ -z ${PRETTY} ]] && echo "${Results[r]} ${Labels[r]}" || echo "$(printf "%'d\n" ${Results[r]}) ${Labels[r]}"
+done
