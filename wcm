@@ -2,7 +2,7 @@
 [[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
 	echo -e "NAME:\n   ${0##*\/} - count all the characters"
 	echo -e "USAGE:\n   \`[ input... | ] ${0##*\/} [string(s), file(s), ...]\`"
-	echo -e "DESCRIPTION:\n   Basically it's a more flexible \`wc -m\`\n"
+	echo -e "DESCRIPTION:\n   Basically it's a more flexible \`wc -m\`"
 	echo '   If input is supplied through a pipe, it counts the characters per line.'
 	echo '   If input is a file, it counts the characters of all lines within said file.'
 	echo "   Otherwise, (if input is a string), it counts it's characters."
