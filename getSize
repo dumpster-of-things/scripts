@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 [[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
-	echo 'NAME:' ; echo "   ${0##*\/} - dependably get terminal size info"
+	echo 'NAME:' ; echo "   ${0##*\/} - reliably get dimensions of terminal"
 	echo 'USAGE:' ; echo "   \` ${0##*\/} [-OPTION(s) ...] \`"
 	echo 'OPTIONS:'
 	echo '   -h,       : Show this message.'
@@ -10,20 +10,21 @@
 	echo '    --width,' ; echo '    --columns' ; echo ""
 	echo '   -y,       : Get terminal height (number of lines).'
 	echo '    --height,' ; echo '    --lines' ; echo ""
-	echo ' * Values are returned in the order requested.'
-	echo ' * Otherwise, the default output is "%X %Y".'
-	echo ""
-	exit 0
+	echo 'DESCRIPTION:'
+	echo ' Works everywhere, whether called directly or from within scripts/functions.'
+	echo ' Values are returned in the order requested.'
+	echo ' Otherwise, the default output is "%X %Y".' ; echo "" ; exit 0
 }
 
-shopt -s checkwinsize && declare -g COLUMNS LINES
+shopt -s checkwinsize && (:;:) && declare -g COLUMNS LINES
+
 get_size() {
 	local fn S
-	_1() { printf '%s %s\n' "$COLUMNS" "$LINES" ; }
-	_2() { read LINES COLUMNS < <(stty size ) && printf '%s %s\n' "$COLUMNS" "$LINES" ; }
+	_1() { printf '%s %s\n' "${COLUMNS}" "${LINES}" ; }
+	_2() { read LINES COLUMNS < <(stty size ) ; (:;:) && printf '%s %s\n' "${COLUMNS}" "${LINES}" ; }
 	_3() { printf '%b' "${TMUX:+\\ePtmux;\\e}\\e[14t${TMUX:+\\e\\\\}" ; IFS=';t' read -d t -t 0.05 -sra term_size ; printf '%i %i\n' "$(( ${term_size[2]} / 16 ))" "$(( ${term_size[1]} / 8 ))" ; }
 	for fn in {1..3}; do
-		[[ ${S:="$(_$fn)"} == *[1-9]\ [1-9]* ]] && break || { unset S ; continue ; }
+		[[ ${S:="$(_${fn})"} == *[1-9]\ [1-9]* ]] && break || continue
 	done
 	echo "${S%\ *} ${S#*\ }" | cut -d\  -f${1:-1,2}
 }
