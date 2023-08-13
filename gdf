@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 Usage() {
 	echo 'NAME:' ; echo "   ${0##*\/} - pretty filesystem info"
-	echo 'USAGE:' ; echo "   \` ${0##*\/} [[-[hvs]] [%path(s)]] \`"
+	echo 'USAGE:' ; echo "   \` ${0##*\/} [-[havs]] [%path(s)...] \`"
 	echo 'DESCRIPTION:'
 	echo '   Generates an attractive aggregation of disk/mount-point information including:'
 	echo '    %Device, %Mount-Point, %Size-Used, %Size-Available, and %Percentage-Used (courtesy of `df`)' 
-	echo '   Ran with no input, it returns this information for non-trivial filesystems -'
-	echo '    that is, it tries to ignore snap container mounts and other tmpfs noise.'
-	echo '    This behavior can be supressed using the `-a,--all,-v,--verbose` flags.'
+	echo '   Ran with no input, it returns this information for "non-trivial" filesystems -'
+	echo '    that is, it tries to ignore snap container mounts, boot partitions, tmpfs, and other noise.'
+	echo '    This behavior can be supressed by using one of the `-a,--all,-v,--verbose` flags.'
 	echo '   If %[file]path(s) are supplied, the results will be limited to their corresponding filesystem (as with `df`).'
 	echo 'OPTIONAL PARAMETERS:'
 	echo -e "   -h,          : Show this message.\n    --help"
