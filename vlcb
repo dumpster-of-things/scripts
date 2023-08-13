@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+[[ "$1" != *(\-)@([hH\?])?([eE][lL][pP]) ]] || { echo -e "NAME:\n   ${0##*\/} - pipe-aware input wrapper for vlc\nUSAGE:\n   \`[%PATH(s)... |] ${0##*\/} [%PATH(s)...]\`\nDESCRIPTION:\n   Enables passing any number of paths to vlc as input through either or both sides of a pipe.\n" ; exit 0 ; }
+vlc $(while read line ; do [[ ! -e "${line}" ]] || realpath "${line}" ; done < <([ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a}" ; done ))
