@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 [[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
-    echo -e "NAME:\n   ${0##*\/} - read the fucking manual"
+    echo -e "NAME:\n   ${0##*\/} - read the fucking manual\n"
     echo -e "USAGE:\n   ${0##*\/} %(application name)s ...\n"
     echo 'DESCRIPTION:'
     echo '   First it converts the specified manpages into a pdf.'
     echo '   Then it tries to open said pdf in your prefered viewer.'
-    echo '   (The generated pdf will be in ~/.rtfm/ )' ; echo ""
+    echo -e '   (The generated pdf will be in ~/.rtfm/ )'"\n"
     exit 0
 }
 [[ -x $(which ps2pdf) ]] || { echo "Missing dependency: ps2pdf" ; exit 1 ; }
