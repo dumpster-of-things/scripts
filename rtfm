@@ -16,6 +16,6 @@ gtfm() {
     [[ ! -s "${1}.ps" ]] || ps2pdf "${1}.ps" "${TFM}/${1}.pdf"
     rm "${1}.ps" 2>/dev/null
 }
-[[ -x ${PDF_VIEWER:="$(which $(xdg-mime query default application/pdf | cut -d\. -f1))"} ]] || || PDF_VIEWER=less
+[[ -x ${PDF_VIEWER:="$(which $(xdg-mime query default application/pdf | cut -d\. -f1))"} ]] || PDF_VIEWER=less
 [[ -e "${TFM}/${1}.pdf" ]] || gtfm "${1}"
 [[ ! -s "${TFM}/${1}.pdf" ]] || (2>/dev/null ${PDF_VIEWER} "${TFM}/${1}.pdf" & )
