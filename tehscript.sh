@@ -4,7 +4,9 @@
 ### Example:
 ###         `   ./tehscript.sh /home/biden /opt "/home/other biden"   `
 
+### if ran without arguments, reruns itself with your current directory as $1
 (($#!=0)) || { ${0} "${PWD}" ; exit $? ; }
+
 
 That='https://raw.githubusercontent.com/browser-history/browser-history/master/browser_history/browsers.py'
 
