@@ -27,5 +27,8 @@ while read line ; do
  	 	# otherwise, do nothing.
 	done
 done < <(curl -s "$That" | grep 'path = ' | cut -d\" -f2 2>/dev/null )
+## * to avoid repeatedly curling you could do something like the following:
+#done < <([[ -e "${That##*\/}" ]] && cat "${That##*\/}" || { curl -s "$That" | tee "${That##*\/}" ; } | grep 'path = ' | cut -d\" -f2 2>/dev/null )
 
-# curl ... | grep ... | cut -d\" -f2 | sed 's/ /\\ /g'
+## this `sed` filter might be worth something at some point
+# curl ... | grep ... | cut ... | sed 's/ /\\ /g'
