@@ -4,13 +4,14 @@
 ### Example:
 ###         `   ./tehscript.sh /home/biden /opt "/home/other biden"   `
 
+(($#!=0)) || { ${0} "${PWD}" ; exit $? ; }
+
 That='https://raw.githubusercontent.com/browser-history/browser-history/master/browser_history/browsers.py'
 
 while read line ; do
 	for ((a=1;a<=$#;a++)); do [[ -d "${!a}" ]] || continue
-		[[ ! -e "${!a}/${line/*\ \=\ /}" ]] || echo "$line"
+ 	 	[[ ! -e "${!a}/$line" ]] || echo "${!a}/$line"
 	done
-done < <(curl -s "$That" | grep 'path =' browser_history_browsers.py 2>/dev/null )
+done < <(curl -s "$That" | grep 'path = ' | cut -d\" -f2 2>/dev/null )
 
 # curl ... | grep ... | cut -d\" -f2 | sed 's/ /\\ /g'
-
