@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+### * TODO: flaggable behaviors for specific workflows
+###     `ppmp -js` be like:  also indent on (parens)
+
+Dipset() { cat <<'EOF'
+NAME:
+   pmpp - pretty much, poor man's  pretty print
+USAGE:
+   ` pmpp [-OPTIONS] <INPUT> `
+EXAMPLE:
+   $ ` echo '<html>{"nested":[{"values":"json"},{"values":"anything"}]}</html>' | pmpp `
+   :   <html>
+   :    {
+   :     "nested":[
+   :      {"values":"json"},
+   :      {"values":"anything"}
+   :     ]
+   :    }
+   :   </html>
+
+OPTIONAL PARAMETERS:
+   -h,         Show this information.
+    --help
+
+EOF
+	exit ${1:-0}
+}
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || Dipset ${@:2}
+
+pP() {
+	i=0
+	while read line ; do
+		case "$line" in
+		\<[!\/]*|\{*|\[*) printf "%$((i++))s $line\n" ;;
+		\<\/*|*\]|*\}) printf "%$((i--))s $line\n" ;;
+		*) printf "%$((i=i<0?0:i))s $line\n"
+		esac
+	done
+}
+
+if [[ "$1" == +(\-)@([pP])?([oO][iI][nN][tT]) ]]; then
+	# specify an html tag to focus within, such as <body>
+	point=($({ [ -t 0 ] || cat - ; [[ ! -f "$3" ]] || cat "$3" ; } | grep -nEo "(<$2>|</$2>)" | cut -d\: -f1 )) || exit 1
+	{ [ -t 0 ] || cat - ; [[ ! -f "$3" ]] || cat "$3" ; } | sed -n "${point[0]},${point[1]}~1p" | sed 's/</\n</g;s/>/>\n/g;s/{/{\n/g;s/\[/\[\n/g;s/\]/\n\]/g;s/}/\n}/g;s/,/,\n/g' | pP
+else
+	sed 's/</\n</g;s/>/>\n/g;s/{/{\n/g;s/\[/\[\n/g;s/\]/\n\]/g;s/}/\n}/g;s/,/,\n/g' $* | pP
+fi
