@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || { cat <<'EOF'
+USAGE:
+   poke [-OPTION] PATH/TO/FILE[, ...]
+DESCRIPTION:
+   * Ensure that PATH/TO/ exists before writing to some FILE.
+   For all PATH/TO/FILE arguments supplied,
+    any non-existant PATH/TO/ is created with `mkdir -p PATH/TO`
+    the default behavior is to then echo PATH/TO/FILE, which
+     should now be safe for writing to.
+   The default behavior may be suppressed by one of the following:
+OPTIONS:
+  -h, --help         Shows this information.
+  -q, -s,            Silently create(:`touch`) FILE
+   --quiet,           after creating(:`mkdir -p`)
+   --silent             the PATH/TO/  it.
+EXAMPLE:
+ ❱  tree ./some
+ : ./some
+ : 0 directories, 0 files
+ ❱  tree some > $(poke some/path/to/this.txt -s some/path/to/that.txt)
+ ❱  tree some
+ : some
+ : └── path
+ :     └── to
+ :         ├── that.txt
+ :         └── this.txt
+ : 3 directories, 2 files
+ ❱  cat some/path/to/that.txt
+ ❱  cat some/path/to/this.txt
+ : some
+ : └── path
+ :     └── to
+ :         ├── that.txt
+ :         └── this.txt
+ : 3 directories, 2 files
+
+EOF
+ exit 0
+}
+Bak() { [[ ! -e "${1}" ]] && { mkdir -p "${1%\/*}" ; echo "${1}" ; } || { ${FUNCNAME} "${1}.$(ls -A1 ${1}* | wcl | tr -d [[:space:]])" ; } ; }
+Poke() { ${1} "$(Bak ${@:2})" || { echo "FAILED to create file ${@:2}" >2 ; exit 2 ; } ; }
+for ((a=1;a<=$#;a++)); do [[ "${!a}" == @(\-)?(\-)@([qQsS])?(uiet|ilent) ]] && Action=touch || Poke "${Action:-echo}" "${!a}" ; done
