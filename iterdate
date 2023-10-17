@@ -57,9 +57,9 @@ declare -gx Fmt
 Days=( MON TUE WED THU FRI SAT SUN )
 Months=( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec )
 eval {Jan,Mar,May,Jul,Aug,Oct,Dec}=31 {Apr,Jun,Sep,Nov}=30 Feb=28
-_leapChk() { return $(( ${1:-$(date '+%Y')} % 4 == 0 ? 1 : 0 )); }
+#_leapChk() { return $(( ${1:-$(date '+%Y')} % 4 == 0 ? 1 : 0 )); }
+_leapChk() { local y=${1:-$(date '+%Y')} ; return $((y%4==0?((y%100==0?((y%400?1:0)):1)):0)) ; }
 _leapChk || Feb=29
-
 for ((a=1;a<=$#;a++)); do
 	case "${!a}" in
 	[\-\+][vV]) (( v = 0 ${!a::1} 1 )) ;;
