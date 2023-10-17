@@ -13,9 +13,9 @@ _Usage() {
 	[[ -n $2 ]] || {
 		echo 'DESCRIPTION:'
 		echo '   Gracefully generate accurate range(s) of datestrings ;'
-		echo '      ostensibly, to iterate over.
+		echo '      ostensibly, to iterate over.'
     echo '     This is particularly useful for getting an accurate day-count,'
-    echo '     For example:
+    echo '     For example:'
     echo '  # WhenIt() {'
     echo '  #   local year week today seasonStart'
     echo '  #   today=$(date +'%Y%m%d') ; year=$(date +'%Y') ; seasonStart=$(iterdate "${year}0821" "${year}0901" +sat | tail -n1)'
