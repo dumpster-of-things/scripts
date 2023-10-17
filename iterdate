@@ -13,8 +13,20 @@ _Usage() {
 	[[ -n $2 ]] || {
 		echo 'DESCRIPTION:'
 		echo '   Gracefully generate accurate range(s) of datestrings ;'
-		echo '      ostensibly, to iterate over.'
-		echo '   {DATES} must be in `YYYYmmdd` format (ie: `date "+%Y%m%d"`).'
+		echo '      ostensibly, to iterate over.
+    echo '     This is particularly useful for getting an accurate day-count,'
+    echo '     For example:
+    echo '  # WhenIt() {'
+    echo '  #   local year week today seasonStart'
+    echo '  #   today=$(date +'%Y%m%d') ; year=$(date +'%Y') ; seasonStart=$(iterdate "${year}0821" "${year}0901" +sat | tail -n1)'
+    echo '  #   (( $today > $seasonStart )) && week=$(iterdate "$seasonStart" "$today" +sat | wcl) || { ((year-=1)) ; week=16 ; }'
+    echo '  #   echo "$year" "$((week>16?16:week))"'
+    echo '  # }'
+    echo '# determines if the college-football season has started.'
+    echo '# if so, it returns the current week number within said season.'
+    echo '# if not, it returns the last week of the previous season.'
+    echo ''
+    echo '   {DATES} must be in `YYYYmmdd` format (ie: `date "+%Y%m%d"`).'
 		echo '   If ommited, {TO_DATE} defaults to the current date.'
 		echo ""
 		echo "OPTIONAL ARGUMENTS:"
@@ -57,6 +69,7 @@ declare -gx Fmt
 Days=( MON TUE WED THU FRI SAT SUN )
 Months=( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec )
 eval {Jan,Mar,May,Jul,Aug,Oct,Dec}=31 {Apr,Jun,Sep,Nov}=30 Feb=28
+## A leap year is any year which is divisible by 400 or which is divisible by one of but not both 100 or 4.
 #_leapChk() { return $(( ${1:-$(date '+%Y')} % 4 == 0 ? 1 : 0 )); }
 _leapChk() { local y=${1:-$(date '+%Y')} ; return $((y%4==0?((y%100==0?((y%400?1:0)):1)):0)) ; }
 _leapChk || Feb=29
