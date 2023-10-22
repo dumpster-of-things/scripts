@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+[[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || { cat <<'EOF'
+NAME:
+   hex2rgb - convert hexadecimal color codes to their decimal rgb[a] equivalent.
+
+USAGE:
+   <HEX> | hex2rgb [-OPTION]
+   hex2rgb [-OPTION] <HEX>
+
+DESCRIPTION:
+   `HEX` can be supplied from either, or both, sides of a pipe
+    in the form of a [1-9] character-length string.
+
+   The first [1-6] characters must be hexidecimal( [0-9a-fA-F] ).
+
+   For `HEX` that are [1-5|7-9] characters in length, refer to
+   the following example:
+
+   [#](HEX)     | (CONVERSION)
+    #f         | 255,255,255,1
+     f0        | 240,240,240,1
+    #abc       | 170,187,204,1
+     abde      | 170,187,221,0.14
+    #abcde     | 170,187,204,0.87
+     abcdef    | 171,205,239,1
+    #abcdefa   | 171,205,239,0.10
+    #1234567   | 18,52,86,0.07
+    #abcdefab  | 171,205,239,0.67
+     ffffff99  | 255,255,255,0.99      
+     ffffff099 | 255,255,255,0.99
+    #ffffff100 | 255,255,255,1
+    #ffffffabc | 255,255,255,1
+
+OPTIONAL PARAMETERS:
+   -d,--delim          specify an alternate field-delimeter to use.
+   -[any other flag]   turns on syntactic output: `rgba(R,G,B,A)`
+
+ALSO:
+   Eventually, this script will be the counterpart to an `rgb2hex` command.
+
+EOF
+    exit 0
+}
+((a=0,i=0))
+for((;++i<=$#;)){
+	[[ "${!i}" != +(\-)@([dD])?([eE][lL][iI][mM])* ]] || { [[ "${!i}" == *[\:\=]* ]] || ((++i)) ; Delim="${!i#*[\:\=]}" ; }
+	[[ "${!i}" != +(\-)+([!a-fA-F0-9]) ]] || Encase="True"
+}
+toDec() { printf '%02d' "0x$1" ; }
+tooBig() { return $(echo "$1 > 1.0" | bc -l) ; }
+Alpha() { [[ "$1" == *[a-fA-F]* ]] && N="$(toDec $1)" || { [[ "$1" == 0[0-9][0-9] ]] && N="${1:1}" || N="$1" ; } ; printf '%.2f' $(echo "scale=2; $N/$((N>100?255:100))" | bc -l) ; }
+while read hex ; do
+	unset R G B A RGB || true
+	[[ "$hex" != *[!a-fA-F0-9]* ]] || { echo -e "\e[31;1mInvalid format:\e[0m '$hex'" ; exit 1 ; }
+	case ${#hex} in
+	1) eval {R,G,B}="$hex$hex" ;;
+	2) eval {R,G,B}="$hex" ;;
+	3) R="${hex::1}${hex::1}" ; G="${hex:1:1}${hex:1:1}" ; B="${hex:2:1}${hex:2:1}" ;;
+	[4-5]) R="${hex::1}${hex::1}" ; G="${hex:1:1}${hex:1:1}" ; B="${hex:2:1}${hex:2:1}" ; A="${hex:3}" ;;
+	6) R="${hex::2}" ; G="${hex:2:2}" ; B="${hex:4:2}" ;;
+	[7-9]) R="${hex::2}" ; G="${hex:2:2}" ; B="${hex:4:2}" ; A="${hex:6}" ;;
+	*) echo -e "\e[31;1mERROR\e[0m\n   ...Your usecase must still be in development.\n" ; exit 1
+	esac
+	((${#A}!=0)) && A="$(Alpha $A)" || A=1 ; tooBig "$A" || A=1
+	for hex in "${R:=00}" "${G:=00}" "${B:=00}" ; do RGB+="$(toDec $hex)${Delim:=,}" ; done
+	[[ ${Encase:="False"} != "False" ]] && echo "rgba(${RGB}$A)" || echo "${RGB}$A"
+done < <([ -t 0 ] || cat - ; for((;++a<=$#;)){ [[ "${!a}" == \-* ]] || echo "${!a/\#/}" ; } )
+
+## Convert a hex color to RGB
+#hex_to_rgb() { : "${1/\#}" ; ((r=16#${_:0:2},g=16#${_:2:2},b=16#${_:4:2})) ; printf '%s\n' "$r $g $b" ; }
+# hex_to_rgb() { : "${1/\#}" ; echo "$((16#${_:0:2})),$((16#${_:2:2})),$((16#${_:4:2}))" ; }
+
+## Convert an RGB color to hex
+# rgb_to_hex() { printf '#%02x%02x%02x\n' "$1" "$2" "$3" ; }
