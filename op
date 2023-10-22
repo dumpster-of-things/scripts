@@ -81,6 +81,7 @@
 	exit 0
 }
 
+((a=0,x=0))
 declare -g String
 declare -ga Strings
 
@@ -96,7 +97,7 @@ fuzzily() {
 	_${1} "${@:2}"
 }
 
-dp() { while read item ; do Array[${#Array[@]}]="$item" ; done < <(for ((x=1;x<=$#;x++)); do echo "${!x}" ; done ; [ -t 0 ] || cat - ) ; local IFS=\| ; echo "${Array[*]}" ; }
+dp() { while read item ; do Array[${#Array[@]}]="$item" ; done < <(for((;++x<=$#;)){ echo "${!x}" ; } ; [ -t 0 ] || cat - ) ; local IFS=\| ; echo "${Array[*]}" ; }
 
 toLast() {
 	_b() { : "${2%$1*}" ; [[ "$1" != \[*\] ]] && String="${2::${#_}+${#1}}" || String="${2::${#_}+1}" ; }
@@ -115,7 +116,7 @@ OtherPipe() {
 	local -a Argz string
 	while read line ; do
 		String="${line}"
-		for ((;++a<=$#;)); do
+		for((;++a<=$#;)){
 			case "${!a}" in
 			*\/*"$'\n'"*\/*) if [[ "${!a##*\/}" == *[!\ ]* ]]; then cat - | dp "$String" | $FUNCNAME "//\|/'${!a##*\/}'" "${@:$a+1}" ; else { echo "$String" ; cat - ; } | xargs | $FUNCNAME "${@:$a+1}" ; fi ; unset String ;;
 			\/*[!\/]*\/*"$'\n'"*) eval Strings\=\( $(eval printf '%q' \"\$\{String"${!a}"\}\") \) ; unset String ;;
@@ -170,7 +171,7 @@ OtherPipe() {
 				continue
 			fi
 			(( ${#String} > 0 )) || break
-		done
+		}
 		(( ${#String} == 0 )) || echo "$String"
 	done < <(cat - )
 }
