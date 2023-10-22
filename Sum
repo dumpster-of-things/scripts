@@ -15,4 +15,4 @@ _sum() {
 	echo "scale=3;${num[*]}0" | bc -l
 }
 
-{ [ -t 0 ] || cat - ; for ((a=1;a<=$#;a++)); do echo "${!a//[!0-9\.\-]/}" ; done ; } | sed '/^\s*$/d' | _sum
+{ [ -t 0 ] || cat - ; for((;++a<=$#;)){ echo "${!a//[!0-9\.\-]/}" ; } | sed '/^\s*$/d' | _sum
