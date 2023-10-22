@@ -81,7 +81,6 @@
 	exit 0
 }
 
-((a=0,x=0))
 declare -g String
 declare -ga Strings
 
@@ -97,7 +96,7 @@ fuzzily() {
 	_${1} "${@:2}"
 }
 
-dp() { while read item ; do Array[${#Array[@]}]="$item" ; done < <(for((;++x<=$#;)){ echo "${!x}" ; } ; [ -t 0 ] || cat - ) ; local IFS=\| ; echo "${Array[*]}" ; }
+dp() { local -i x; while read item ; do Array[${#Array[@]}]="$item" ; done < <(for((;++x<=$#;)){ echo "${!x}" ; } ; [ -t 0 ] || cat - ) ; local IFS=\| ; echo "${Array[*]}" ; }
 
 toLast() {
 	_b() { : "${2%$1*}" ; [[ "$1" != \[*\] ]] && String="${2::${#_}+${#1}}" || String="${2::${#_}+1}" ; }
@@ -113,6 +112,7 @@ toFirst() {
 dundre() { [[ "$String" != *$1* ]] || String="${String%%${String#*$1}*}" ; }
 
 OtherPipe() {
+	local -i a=0
 	local -a Argz string
 	while read line ; do
 		String="${line}"
