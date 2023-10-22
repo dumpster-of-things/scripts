@@ -115,7 +115,7 @@ OtherPipe() {
 	local -a Argz string
 	while read line ; do
 		String="${line}"
-		for ((a=1;a<=$#;a++)); do
+		for ((;++a<=$#;)); do
 			case "${!a}" in
 			*\/*"$'\n'"*\/*) if [[ "${!a##*\/}" == *[!\ ]* ]]; then cat - | dp "$String" | $FUNCNAME "//\|/'${!a##*\/}'" "${@:$a+1}" ; else { echo "$String" ; cat - ; } | xargs | $FUNCNAME "${@:$a+1}" ; fi ; unset String ;;
 			\/*[!\/]*\/*"$'\n'"*) eval Strings\=\( $(eval printf '%q' \"\$\{String"${!a}"\}\") \) ; unset String ;;
