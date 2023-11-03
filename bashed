@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 [[ "$1" != +(\-)@([hH])?([eE][lL][pP]) ]] || {
-	echo -e "\e[1;32mNAME\e[0;32m:\e[0m"
-	echo '   op - otherpipe'
+	echo -e "\e[1;32mNAME\e[0;32m:\e[0m\n   bashed - omni-directional bash-builtin-centric transmutations.\n"
 	echo -e "\e[1;32mUSAGE\e[0;32m:\e[0m"
-	echo -e "   Apply EXPRESSION(s) to each line of input passed through a pipe [\e[1;4;33mAND/OR\e[0m] read from a file:"
+	echo -e "   Apply 'EXPRESSION'(s) to each line of input passed through a pipe [\e[1;4;33mAND/OR\e[0m] read from a file:"
 	echo -e "         \`\e[1;37m[ input... | ] ${0##*\/}  'EXPRESSION(s)'...  [FILE]\e[0m\`"
 	echo -e "                                                 \e[0;37m# if supplied, FILE must be the final argument.\e[0m"
 	echo -e "   \e[1;4;33mOR\e[0m passed verbatim as \`\$1\`:"
@@ -40,9 +39,9 @@
 		echo "  '??[=|~]_.{EXPR}' : Apply EXPR to lines [matching|containing] _"
 		echo "  '?![=|~]_.{EXPR}' : Apply EXPR to lines not [matching|containing] _"
 		echo -e "      \e[0;37m# examples:\e[0m"
-		echo -e "      \e[0;37m#\e[0m  \`... | op '??=*whatev*' \`\e[0;37m (supress lines not matching *'whatev'*)\e[0m"
-		echo -e "      \e[0;37m#\e[0m  \`... | op '?!~whatev' \`\e[0;37m (supress lines containing 'whatev')\e[0m"
-		echo -e "      \e[0;37m#\e[0m  \`... | op '??~whatev.{(_).}' \`\e[0;37m (prepend all lines containing 'whatev' with '_')\e[0m"
+		echo -e "      \e[0;37m#\e[0m  \`... | bashed '??=*whatev*' \`\e[0;37m (supress lines not matching *'whatev'*)\e[0m"
+		echo -e "      \e[0;37m#\e[0m  \`... | bashed '?!~whatev' \`\e[0;37m (supress lines containing 'whatev')\e[0m"
+		echo -e "      \e[0;37m#\e[0m  \`... | bashed '??~whatev.{(_).}' \`\e[0;37m (prepend all lines containing 'whatev' with '_')\e[0m"
 		echo ""
 		echo -e "\e[1;32mMISCELLANEOUS EXPRESSIONS\e[0;32m:\e[0m"
 		echo '  -[BP],'
@@ -58,15 +57,15 @@
 		echo '   -[fFcC],         : POSIX color codes (defaults to `\e[0;...`(typically 30-40),'
 		echo '   --[color,font]=                       but any `\e[...` expression should work)'
 		echo -e "                   \e[0;37m# examples:\e[0m"
-		echo -e "                   \e[0;37m#\e[0m   \`... | op -c '1;33;3' \`"
-		echo -e "                   \e[0;37m#\e[0m   \`... | op --color=33 \`"
+		echo -e "                   \e[0;37m#\e[0m   \`... | bashed -c '1;33;3' \`"
+		echo -e "                   \e[0;37m#\e[0m   \`... | bashed --color=33 \`"
 		echo -e "                    \e[0;37m(*) supply font effects last as any remaining EXPRESSIONS are likely to remove them.\e[0m"
 		echo ""
 		echo "  ':*',          : Extends the \`:N:N\` substring expansions to allow any string/[pattern]. Carve away."
 		echo -e "   '::*',         \e[0;37m# examples:\e[0m"
-		echo -e "    ':*:*',       \e[0;37m#\e[0m   \`... | op ':[wW]::hat[eE]ver' \`"
-		echo -e "     ':*::*'      \e[0;37m#\e[0m   \`... | op ':ex:[ABC123]' \`"
-		echo -e "                  \e[0;37m#\e[0m   \`... | op '::[aAbBcC]' \`"
+		echo -e "    ':*:*',       \e[0;37m#\e[0m   \`... | bashed ':[wW]::hat[eE]ver' \`"
+		echo -e "     ':*::*'      \e[0;37m#\e[0m   \`... | bashed ':ex:[ABC123]' \`"
+		echo -e "                  \e[0;37m#\e[0m   \`... | bashed '::[aAbBcC]' \`"
 		echo ""
 		echo "  \"//_/*\$'\\n'*\" : Replace each of '_' with *newline*"
 		echo ""
